@@ -9,10 +9,12 @@ figure;
 load(['jov2009_data.mat']);
 c=no_contrast-1;
 
+% your code is as clear as Cardiff's sky
+% learn to name your variables with intelligible names
 no=k(isnan(k(:,3))==1 & k(:,6)>0,6);
 mno=mean(no);
 medianno=median(no);
-Hno=hist(no,x)/9;
+Hno=hist(no,x)/9; % why do you divide by 9?
 yy=conv(Hno,filter1);
 y=yy((n+1)/2:end-(n-1)/2)';
 Hno_f=interp1(x,y,xx,'cubic',nan); % 1 = Scone / 2 = Lum
@@ -43,7 +45,7 @@ for s=2:no_soa-1
     error_count(s)=length(err_dist(err_dist>0));
     dist_count(s)=length(dist(dist>0));
     errorrate(s)=error_count(s)/(error_count(s)+dist_count(s));
-    
+
     subplot(no_soa-2,1,s-1); hold on; xlim([0 300]);
     plot(xx, Hno_f,'-','Color',[0.7 0.7 0.7],'LineWidth',2);
     plot(xx, Hdi_f,'k-','LineWidth',2);

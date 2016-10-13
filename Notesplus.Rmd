@@ -1,8 +1,13 @@
 ---
 title: "Report Diffusion Accumulation"
-author: "Geoffrey Mégardon"
+author: "Geoffrey Megardon"
 date: "12 October 2016"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+    number_sections: true
 runtime: shiny
 ---
 
@@ -11,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-## Addition of two sources of noise
+# Addition of two sources of noise
 
 Note that:
 $$
@@ -30,7 +35,7 @@ var(d1)
 
 ```
 
-## Bogacz' and Trappenberg's inclusion of noise in the model
+# Bogacz' and Trappenberg's inclusion of noise in the model
 Trappenberg et al. 2001 uses the equation:
 $$
 \tau \frac{du}{dt} = -Lu + I + \alpha W_1
@@ -44,18 +49,20 @@ That is:
 $$
 \frac{du}{dt} = -Lu + I + \alpha \frac{dW_1}{dt}
 $$
-Thus, in Bogacz et al. 2006, if L = 0 and I=0:
+Thus, in Bogacz et al. 2006, if L = 0 and I=0 (i.e. perfect accumulation, noise only):
 $$
 u(t) = \alpha W_1(t)
 $$
 While in Trappenbeg:
 $$
-u(t) = \alpha \int_{t0}^{t} W_1(t)
+u(t) = \frac{\alpha}{\tau} \int_{t0}^{t} W_1(t)dt
 $$
 
-## Accumulation of Noise in accumulation models
+Thus, in Bogacz et al.' s equations, it seems that there is no accumulation of noise... ? 
 
-### Solution of u(t)
+# Accumulation of Noise in accumulation models
+
+## Solution of u(t)
 Using the equation:
 $$
 \tau \frac{du}{dt} = -Lu + I + \alpha W_1
@@ -103,7 +110,7 @@ $$
 u(t) = \Big(1-\frac{L}{\tau}\Big)^t u(0)+ \frac{1}{\tau}\sum_{s=1}^{t}\Big(1-\frac{L}{\tau}\Big)^{s-1}B(t-s)
 $$
 
-### Continuous counter part:
+## Continuous counter part:
 
 The equation we are using is similar to the integrate and fire neuron model for which the continuous solution is well known:
 $$
@@ -123,7 +130,7 @@ Exp <- function(L, tau, t){
 time <- 0:1000
 
 plot(time, Exp(10, 1000, time))
-points(time, almostExp(10, 1000, time), col='red')
+points(time, almostExp(10, 1000, time), col='red', type='l')
 
 plot(time, Exp(100, 100, time))
 points(time, almostExp(100, 100, time), col='red')
@@ -131,7 +138,7 @@ points(time, almostExp(100, 100, time), col='red')
 
 Importantly note that when $\tau = L$, then $\Big(1-\frac{L}{\tau}\Big)^t = 1$ for $t=0$
 
-### What happen to noise for different value of L and $\tau$ ?
+## What happen to noise for different value of L and $\tau$ ?
 Setting $\tau > 1$ and $u(0) = 0$,
 
 - If $L = \tau$:
@@ -177,4 +184,5 @@ time <- 0:1200
 plot(time, almostExp(1, 10, time), col='red')
 
 ```
+
 

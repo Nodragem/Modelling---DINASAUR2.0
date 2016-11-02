@@ -8,7 +8,6 @@ output:
     toc_float:
       collapsed: false
     number_sections: true
-runtime: shiny
 ---
 
 ```{r setup, include=FALSE}

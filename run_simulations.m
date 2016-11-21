@@ -1,5 +1,6 @@
 clearvars;
 close all;
+addpath('util')
 %sim_tab=[
 %  1 -60 1200 50;
 % 2 -40 1200 50
@@ -31,7 +32,7 @@ for sim=1:no_sim % we run only 1 simulation of 100 iterations/trials here
 
     tic
     % run the simulation 100 times:
-    [srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=dinasaur2(soa,no_trials,noise);
+    [srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=runDinasaur2(soa,no_trials,noise);
     disp('time of simulation')
     toc
 

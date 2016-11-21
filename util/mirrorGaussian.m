@@ -1,4 +1,4 @@
- function y = in_signal_pbc(loc,ampl,sig,nn,dx)
+ function y = mirrorGaussian(loc,ampl,sig,nn,dx)
     y=zeros(nn,1);
     for i=1:nn;
          di=min(abs(i*dx-loc),2*pi-abs(i*dx-loc));

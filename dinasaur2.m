@@ -232,7 +232,7 @@ for trial=1:no_trials;
     rall_no = rall;
 
     % FIND WHEN THE THRESHOLD WAS REACHED for different locations on the map:
-    tmp_dist=tall(rall(:,node_dist)>ini_thres);
+    tmp_dist=tall(rall(:,node_dist)>ini_thres); % isn't it cheating?
     tmp_targ=tall(rall(:,node_targ)>ini_thres);
     tmp_err=tall(rall_no(:,node_dist)>ini_thres);
     tmp_targo=tall(rall_no(:,node_targ)>ini_thres);
@@ -257,7 +257,7 @@ for trial=1:no_trials;
     srt=floor(sacc_dir/(2*around_targ+1));
     sacc_dir=node_targ-around_targ-1+sacc_dir-(2*around_targ+1)*srt;
     srt=srt+OT-1;
-    % NOTE: NEITHER srt AND sacc_dir ARE RETURNED, so why did they computed it?
+    % NOTE: NEITHER srt NOR sacc_dir ARE RETURNED, so why did they computed it?
 
 
     if (isempty(tmp_dist)==0)

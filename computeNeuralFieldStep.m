@@ -1,4 +1,4 @@
-​function firingrate = computeNeuralFieldStep(nstep, u_zero, mat_connections , input_exo, input_endo ,noise_t, tau,beta, dx,field_size) 
+​function firingrate = computeNeuralFieldStep(nstep, u_zero, mat_connections , input ,noise_t, tau,beta, dx,field_size) 
    % simulate a 1D neural field
    % I didn't explain all the parameters...
    %
@@ -6,33 +6,33 @@
    % ----------
    % nstep: (type integer)
    %	number of time steps to go to the end of the simulation (maybe we don't need to comment every thing but...)
-   % u_zero: (type 1D array) 
+   % u_zero: (type 1D array)
    %	represent the membrane potential of neurons at time zero (note we use the notation u for membrane potential)
-   % mat_connection: (type matrix) 
+   % mat_connection: (type matrix)
    %	the row i describes the connection of the neuron i with its neighbours (columns)
-   % input_exo, input_endo: (type matrix) 
+   % input_exo, input_endo: (type matrix)
    %	value of the input over time step (columns) and space (rows)
    % tau: (type float)
    %	time constant of the neurons
    % beta: (type float)
    %	stepness of the sigmoid used to convert our membrane potential (u) in a firing rate
-   % dx: (type float) 
+   % dx: (type float)
    %	one cell of the model represent dx degrees (or radians) in the visual field
    %
    % Return:
    % ----------
-   % firingrate: (type matrix) 
+   % firingrate: (type matrix)
    %	describes the firing rate of all the neurons of the field (rows) for all the time steps (columns)
    % -----------------------------------------------------------------------------------------------------------
    tau_inv = 1./tau;      % inverse time constant
-   sum_input = transpose( input_exo(1:nstep,:) + input_endo(1:nstep,:) + noise_t(1:nstep,:) );  % I replace ' with transpose just because the highlighting was not happy
-   firingrate = zeros(field_size,nstep); 
+   sum_input = transpose(input(1:nstep,:) + noise_t(1:nstep,:) );  % I replace ' with transpose just because the highlighting was not happy
+   firingrate = zeros(field_size,nstep);
    % we initialize the neural field at time t_0:
    u = u_zero
-   r = 1 ./ (1 + exp(-beta*u));  firingrate(:,1)=r; 
+   r = 1 ./ (1 + exp(-beta*u));  firingrate(:,1)=r;
    % we run a loop to compute the neural field firing rate evolution over all the time steps
    % Method d'Euler: g(t+1) = g(n) + dg/dt
-   for t=2:nstep 
+   for t=2:nstep
      u = u + tau_inv * (sum_input(:,t-1) - u + mat_connections * r * dx); % u is the current membrane potential
      r = 1 ./ (1 + exp(-beta*u));
      firingrate(:,t) = r;

@@ -1,0 +1,187 @@
+---
+title: "Report Diffusion Accumulation"
+author: "Geoffrey Megardon"
+date: "12 October 2016"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# Addition of two sources of noise
+
+Note that:
+$$
+\alpha N(0,1) + \beta N(0,1) = \sqrt{\alpha^2 + \beta^2} N(0,1)
+$$
+
+```{r}
+d1 <- 50*rnorm(10000)
+d2 <- 50*rnorm(10000)
+d3 <- d2 + d1
+plot(density(d1))
+lines(density(d2))
+lines(density(d3), col='red')
+var(d3)
+var(d1)
+
+```
+
+# Bogacz' and Trappenberg's inclusion of noise in the model
+Trappenberg et al. 2001 uses the equation:
+$$
+\tau \frac{du}{dt} = -Lu + I + \alpha W_1
+$$
+Where $W_1$ is a noise of mean 0 and variance 1, i.e. $N(0,1)$.
+Note that Bogazc et al. 2006 uses this:
+$$
+du = (-Lu + I)dt + \alpha dW_1
+$$
+That is:
+$$
+\frac{du}{dt} = -Lu + I + \alpha \frac{dW_1}{dt}
+$$
+Thus, in Bogacz et al. 2006, if L = 0 and I=0 (i.e. perfect accumulation, noise only):
+$$
+u(t) = \alpha W_1(t)
+$$
+While in Trappenbeg:
+$$
+u(t) = \frac{\alpha}{\tau} \int_{t0}^{t} W_1(t)dt
+$$
+
+Thus, in Bogacz et al.' s equations, it seems that there is no accumulation of noise... ? 
+
+# Accumulation of Noise in accumulation models
+
+## Solution of u(t)
+Using the equation:
+$$
+\tau \frac{du}{dt} = -Lu + I + \alpha W_1
+$$
+Let simplify to:
+$$
+\tau \frac{du}{dt} = -Lu + B
+$$
+Using the method of Euler (as it is what we used):
+$$
+u(t) = u(t-1) + \frac{1}{\tau}(-Lu(t-1) + B(t-1))\\
+u(t) = \Big(1-\frac{L}{\tau}\Big)u(t-1) + \frac{1}{\tau}B(t-1)
+$$
+Developping $u(t-1)$ further:
+$$
+u(t) = \Big(1-\frac{L}{\tau}\Big)
+\Bigg[ \Big(1-\frac{L}{\tau}\Big)u(t-2) + \frac{1}{\tau}B(t-2)\Bigg]
++ \frac{1}{\tau}B(t-1)
+$$
+And $u(t-2)$ further:
+$$
+u(t) = \Big(1-\frac{L}{\tau}\Big)
+\Bigg[ \Big(1-\frac{L}{\tau}\Big)
+\Bigg[ \Big(1-\frac{L}{\tau}\Big)u(t-3) + \frac{1}{\tau}B(t-3)\Bigg]
++ \frac{1}{\tau}B(t-2)\Bigg]
++ \frac{1}{\tau}B(t-1)
+$$
+We obtain:
+$$
+\Big(1-\frac{L}{\tau}\Big)^3u(t-3) + \frac{1}{\tau}B(t-1)
++ \frac{1}{\tau}\Big(1-\frac{L}{\tau}\Big)B(t-2) +\frac{1}{\tau}\Big(1-\frac{L}{\tau}\Big)^2B(t-3)
+$$
+That can be written:
+$$
+\Big(1-\frac{L}{\tau}\Big)^3u(t-3) + \frac{1}{\tau}\Big(1-\frac{L}{\tau}\Big)^0B(t-1)
++ \frac{1}{\tau}\Big(1-\frac{L}{\tau}\Big)^1B(t-2) +\frac{1}{\tau}\Big(1-\frac{L}{\tau}\Big)^2B(t-3)
+$$
+Thus, we can see the following pattern:
+$$
+u(t) = \Big(1-\frac{L}{\tau}\Big)^Nu(t-N) + \frac{1}{\tau}\sum_{s=1}^{N}\Big(1-\frac{L}{\tau}\Big)^{s-1}B(t-s)
+$$
+
+if $N=t-t0$ and t0=0, we can write:
+$$
+u(t) = \Big(1-\frac{L}{\tau}\Big)^t u(0)+ \frac{1}{\tau}\sum_{s=1}^{t}\Big(1-\frac{L}{\tau}\Big)^{s-1}B(t-s)
+$$
+
+## Continuous counter part:
+
+The equation we are using is similar to the integrate and fire neuron model for which the continuous solution is well known:
+$$
+u(t) = \exp\Big(-\frac{L}{\tau}t\Big)u(0) + \frac{1}{\tau} \int_{0}^{t}\exp\Big(-\frac{L}{\tau}s\Big)B(t-s)ds
+$$
+
+Is the function $\Big(1-\frac{L}{\tau}\Big)^t$ equivalent to $\exp\Big(-\frac{L}{\tau}t\Big)$ ?
+``` {r}
+almostExp <- function(L, tau, t){
+  return ((1- L/tau)^t)
+}
+
+Exp <- function(L, tau, t){
+  return (exp(-L*t/tau))
+}
+
+time <- 0:1000
+
+plot(time, Exp(10, 1000, time))
+points(time, almostExp(10, 1000, time), col='red', type='l')
+
+plot(time, Exp(100, 100, time))
+points(time, almostExp(100, 100, time), col='red')
+```
+
+Importantly note that when $\tau = L$, then $\Big(1-\frac{L}{\tau}\Big)^t = 1$ for $t=0$
+
+## What happen to noise for different value of L and $\tau$ ?
+Setting $\tau > 1$ and $u(0) = 0$,
+
+- If $L = \tau$:
+  $$
+  u(t) = \frac{1}{\tau}\sum_{s=1}^{t}\Big(0\Big)^{s-1}B(t-s)
+  $$
+  Remembering that $0^0 = 1$, we obtain:
+  $$
+  u(t) = \frac{1}{\tau}B(t-s)
+  $$
+  The value of u(t) is a perfect/instantaneous/exact copy of the input (or noise), scaled by $1/\tau$.
+  **Thus, the variance of its noise does not accumulated, it stays to $\alpha$.**
+
+- If $L = 0$:
+  $$
+  u(t) = \frac{1}{\tau}\sum_{s=1}^{t}B(t-s)
+  $$
+  That is a perfect accumulation, scaled by $1/\tau$.
+  **Thus, its accumulated variance goes to infinity with time.**
+  
+- If $L<\tau$:
+  $$
+  u(t)= \frac{1}{\tau}\sum_{s=1}^{t}\Big(1-\frac{L}{\tau}\Big)^{s-1}B(t-s)\\
+  $$
+  is converging because:
+  $$
+  \lim_{t\to\infty}  \Big(1-\frac{L}{\tau}\Big)^{s-1} = 0  
+  $$
+  this also means that, although u(t) accumulate recent input, it forgets them with time (smaller weight   with time).
+  **Thus, its maximum accumulated variance is bounded. It stabilizes to a constant variance after a      while. For instance, if only the 2 last time step have a strong effect, the variance will set to $\sqrt{\sqrt{\alpha^2 + \alpha^2} +\alpha^ 2} N(0,1)$ after the time step 3.** 
+
+  
+  
+In DINASAUR, the "memory" of u(t) is short compared to the simulation time.
+[As it makes 1200 steps (?) to simulate 1.2 second of real-time, we can state that $\tau=10$ is in millisecond.]
+``` {r}
+almostExp <- function(L, tau, t){
+  return ((1- L/tau)^t)
+}
+
+time <- 0:1200
+
+plot(time, almostExp(1, 10, time), col='red')
+
+```
+
+

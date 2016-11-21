@@ -1,35 +1,46 @@
-clear all;
+clearvars;
 close all;
-sim_tab=[
-  1 -60 1200 50;
- 2 -40 1200 50
- 3 -20 1200 50
- 4 0 1200 50;
- 5 20 1200 50
- 6 40 1200 50;
- 7 60 1200 50;
-   ];
-% sim_tab=[
-%     1 0 50 50; 
-%     ];
+%sim_tab=[
+%  1 -60 1200 50;
+% 2 -40 1200 50
+% 3 -20 1200 50
+% 4 0 1200 50;
+% 5 20 1200 50
+% 6 40 1200 50;
+% 7 60 1200 50;
+%   ];
+
+% Initially the model was made to explain the behavior of human participants
+% during an experiment where we present them a target and a distractor.
+% the experiment consist of a lot of trials of ~1s. From which we estimate the reaction time distributions.
+% Because of that, here, the authors called an iteration a trial (because it correspond a trial of one participant in our experiment )
+% and they call a simulation a bunch of N iterations/trials (that would correspond to a session of N trials for one participant).
+
+sim_tab=[ % here we just run 100 iterations to test the MATLAB version against the Python version
+     1 0 100 50; % [simulation ID, SOA (time distance between target and distractor), nb trials, amplitude of white noise]
+     ];
 
 
 no_sim=size(sim_tab,1);
-for sim=1:no_sim
+
+for sim=1:no_sim % we run only 1 simulation of 100 iterations/trials here
     sim_number=sim_tab(sim,1);
     soa=sim_tab(sim,2);
     no_trials=sim_tab(sim,3);
     noise=sim_tab(sim,4);
-    
-    %         [srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=Aline(soa,no_trials,noise);
+
+    tic
+    % run the simulation 100 times:
     [srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=dinasaur2(soa,no_trials,noise);
-    
+    disp('time of simulation')
+    toc
+
+    % collect the data and plot them -- NOT INTERESTING FOR US AFTER THIS POINT
     srt_targ_allsoa(:,sim)=srt_targ_all;
     srt_dist_allsoa(:,sim)=srt_dist_all;
     srt_err_allsoa(:,sim)=srt_err_all;
-    
-    
-    
+
+
     RTmin=0;
     RTmax=500;
     xrange=[RTmin 300]; %yrange=[0 22];
@@ -38,17 +49,17 @@ for sim=1:no_sim
     xx=x(1):500;
     n=5; sigma=1;
     filter1=gaussfilter(n,sigma);
-    
+
     figure(1); subplot(size(sim_tab,1),1,sim); hold on;
     Hno=hist(srt_targo_all,x);
     Herr=hist(srt_dist_all,x);
     Herr_no=hist(srt_err_all,x);
     Hdi=hist(srt_targ_all,x);
-    
+
     yy=conv(Hno,filter1);
     y=yy((n+1)/2:end-(n-1)/2)';
     Hno_f=interp1(x,y,xx,'cubic',nan);
-    
+
     yy=conv(Hdi,filter1);
     y=yy((n+1)/2:end-(n-1)/2)';
     Hdi_f=interp1(x,y,xx,'cubic',nan); % 1 = Scone / 2 = Lum
@@ -73,7 +84,7 @@ for sim=1:no_sim
 %     figure(2); subplot(5,1,sim); hold on;
 %     %         plot(x,(Hno-Hdi),'g-');
 %     plot(x,Hratio,'r-');
-    
+
     mn_targ(sim)=mean(srt_targ_all(srt_targ_all>0));
     mn_dist(sim)=mean(srt_dist_all(srt_dist_all>0));
     mn_err(sim)=mean(srt_err_all(srt_err_all>0));
@@ -86,7 +97,7 @@ for sim=1:no_sim
     rdemdn(sim)=mdn_targ(sim)-mdn_targo(sim);
     std_no=std(srt_targo_all(srt_targo_all>0));
     sk_no=skewness(srt_targo_all(srt_targo_all>0));
-    
+
     l_targo=length(srt_targo_all(srt_targo_all>0));
     l_err=length(srt_err_all(srt_err_all>0));
     l_targ=length(srt_targ_all(srt_targ_all>0));
@@ -94,17 +105,17 @@ for sim=1:no_sim
     err_rate_dist(sim)=l_dist*100/(l_dist+l_targ);
     err_rate_no(sim)=l_err*100/(l_targo+l_err);
     err_rate_p(sim)=l_err*100/(l_targ);
-    
-    
+
+
 %     save(['dinasaur2_' num2str(soa) '.mat']);
 end
 
 % draw scatter figure of rde against baseline latency.
-figure; 
+figure;
 
 for sim=1:no_sim
     RDEdistrib(:,sim)=srt_targ_allsoa(:,sim)'-srt_targo_all;
-subplot(no_sim,1,sim); hold on; 
+subplot(no_sim,1,sim); hold on;
 xlim(xrange);
 ylim([0 200]);
 scatter(srt_targo_all,srt_targ_allsoa(:,sim)'-srt_targo_all,4,[0 0 0]);
@@ -118,11 +129,11 @@ RDEcheckmdn=nanmedian(RDEdistrib);
 
 % draw histograms of rde for each trial.
 figure;  hold on;
-    
+
    xrange=[0 200]; %yrange=[0 22];
     bin_size=20;
     x = [0:bin_size:220];
-    
+
     xlim(xrange); %ylim(yrange);
     B=[0 .2 .4 0 .6 .8 1]; R=[1 .8 .6 0 .4 .2 0];
 

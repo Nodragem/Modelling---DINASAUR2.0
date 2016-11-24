@@ -1,4 +1,4 @@
-function w = gaussianConnection1D(nn,dx,sig,A,I)
+function w = gaussianConnection2D(nn,dx,sig,A,I)
 w=zeros(nn);
 for loc=1:nn;
     for i=1:nn;

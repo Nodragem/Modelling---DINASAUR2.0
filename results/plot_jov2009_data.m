@@ -10,7 +10,7 @@ load(['jov2009_data.mat']);
 c=no_contrast-1;
 
 % your code is as clear as Cardiff's sky
-% learn to name your variables with intelligible names
+
 no=k(isnan(k(:,3))==1 & k(:,6)>0,6);
 mno=mean(no);
 medianno=median(no);

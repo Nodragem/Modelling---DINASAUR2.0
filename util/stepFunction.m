@@ -4,5 +4,5 @@ function y = stepFunction(x, amplitude, start, stop, baseline)
   else
     y = ones(size(x))*baseline;
   end
-  y(x>start & x<stop) = amplitude;
+  y(x>=start & x<=stop) = amplitude;
 return

@@ -14,30 +14,29 @@ sim_keys = {'IDs' 'SOA' 'TargetPos' 'DistractorPos'...
 
 sim_values = [];
 for i=1:8;
-  sim_values(i,:) = [i, 0, 0+i*10, 10, 1, 0, 500, 50];
+  sim_values(i,:) = [i, 0, 0+i*10, 10, 1, 0, 100, 50];
 end
 sim_values = array2table(sim_values, 'VariableNames', sim_keys);
 disp('To Simulate:')
 disp(sim_values)
-save('./results/distances/table_distance.mat', 'sim_values')
+writetable(sim_values, './results/distances/table_distance.csv')
 
 
 for row = 1:size(sim_values, 1) % we run only 1 simulation of 100 iterations/trials here
     disp('Current Simulation:  '); disp(sim_values{row, :});
     tic
     % run the simulation 100 times:
-    [targ_RTs, dist_RTs, rall, u]= runDinasaur2(sim_values(row,:));
+    [targ_RTs, dist_RTs, rall, uall]= runDinasaur2(sim_values(row,:));
     disp('time of simulation')
     toc
 
     tic
-    results(row).keys = sim_keys{:,:};
-    results(row).values = sim_values(row,:);
-    results(row).target_RTs = targ_RTs;
-    results(row).distractor_RTs = dist_RTs;
-    results(row).firing_rate = rall;
-    results(row).membrane_potential = u;
-    save('./results/distances/results_distance.mat', 'results')
+    results.keys = sim_keys;
+    results.values = table2array(sim_values(row,:));
+    results.firing_rate = rall;
+    % note that we can transform the firing rate to membrane potential with
+    % an inverse function.
+    save(['./results/distances/results_', num2str(row), '_distance.mat'], 'results')
     disp('time saving data')
     toc
 

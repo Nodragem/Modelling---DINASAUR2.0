@@ -108,21 +108,26 @@ I_map = I_conn * I_all; % the time course of I_fix (col 1) will  be mapped to th
 
 
 %% SIMULATION OF THE MODEL WITH THE COMPUTED INPUT, RUN [no_trials] ITERATIONS WITH noise_amplitude
+nb_trials = args{1, 'nbTrials'};
 list_RT_targ  = [];
 list_RT_dist  = [];
-for trial=1:args{1, 'nbTrials'};
+rall = zeros([nb_trials, nn, nstep]);
+uall = zeros([nb_trials, nn, nstep]);
+for trial=1:nb_trials;
   % note that the model was initially run twice for each iteration/trial,
   % in order to compute a control trial (rall_no) for each trial (rall).
 
     %% SIMULATION:
     noise_t = [zeros(noise_start, nn); noise_amplitude*randn(nstep - noise_start, nn)]'; % was bugged in Aline code
     % -- I removed the computation of the control trial:
-    [rall, uall] = computeNeuralFieldStep(nstep, zeros(nn, 1)-10, w, I_map, noise_t, tau_u, beta, nn);
-
+    [r, u] = computeNeuralFieldStep(nstep, zeros(nn, 1)-10, w, I_map, noise_t, tau_u, beta, nn);
+    
     %% EXTRACT RESULTS:
+    rall(trial, :, :) = r;
+    uall(trial, :, :) = u;
     % 1 - FIND WHEN THE THRESHOLD WAS REACHED for different locations on the map:
-    tmp_dist=time(rall(:,loc_dist) > ini_thres);
-    tmp_targ=time(rall(:,loc_targ) > ini_thres);
+    tmp_dist=time(r(:,loc_dist) > ini_thres);
+    tmp_targ=time(r(:,loc_targ) > ini_thres);
 
     % 2 - DEFINE THE RESPONSE and THE REACTION TIME OF THE MODEL:
     if (not(isempty(tmp_dist)))

@@ -14,7 +14,7 @@ sim_keys = {'IDs' 'SOA' 'TargetPos' 'DistractorPos'...
 
 sim_values = [];
 for i=1:8;
-  sim_values(i,:) = [i, 0, 0+i*10, 10, 1, 0, 100, 50];
+  sim_values(i,:) = [i, 0, 0+i*10, 10, 1, 0, 1, 50];
 end
 sim_values = array2table(sim_values, 'VariableNames', sim_keys);
 disp('To Simulate:')
@@ -36,7 +36,7 @@ for row = 1:size(sim_values, 1) % we run only 1 simulation of 100 iterations/tri
     results.firing_rate = rall;
     % note that we can transform the firing rate to membrane potential with
     % an inverse function.
-    save(['./results/distances/results_', num2str(row), '_distance.mat'], 'results')
+    save(['./results/distances/results_', num2str(row), '_distancetest.mat'], 'results')
     disp('time saving data')
     toc
 

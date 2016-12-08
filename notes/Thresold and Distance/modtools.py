@@ -12,6 +12,7 @@ import numpy as np
 import os, glob
 from enum import Enum
 from sympy import *
+import re
 x, y, z = symbols("x y z")
 
 #r = loadmat("distances/results_1_distance.mat")
@@ -26,12 +27,11 @@ x, y, z = symbols("x y z")
 ## ('keys', 'values', 'target_RTs', 'distractor_RTs', 'firing_rate', 'membrane_potential')
 #print r[0,2]["keys"]
 
-class Threshold(Enum):
-    flat = 1
-    exponential = 2
-    stochastic = 3
-    exp_stochastic = 4
-
+ 
+thresholds = {"flat085": "0.85",
+              "exponential20": "1*exp(-x/20) + 0.85",
+              "exponential10": "1*exp(-x/10) + 0.85",
+              "inverse": "1/x + 0.85"}
     
 
 def getFlatThreshold(fr, threshold, return_slice = False, dt=1, dx=1):
@@ -72,13 +72,26 @@ def getFlatThreshold(fr, threshold, return_slice = False, dt=1, dx=1):
 #    plt.imshow(fr[first_trial[34], :, :]>0.85)
 #    plt.vlines(first_time[0], ymin=0, ymax=200)
 #    plt.scatter(first_time[0], first_loc[0])
-        
+     
+def getArrayFromMath(expression, space, reshaping = None):
+    symbolic_f = sympify(expression)
+    if space is None:
+        space = np.arange(fr.shape[1])
+    numerical_f = lambdify(x, symbolic_f, 'numpy')
+    threshold = numerical_f(space)
+    if np.isscalar(threshold): # sympy stupidly return a scaler if the function is a constant
+        threshold = np.repeat(threshold, len(space))
+    if reshape is None:
+        return threshold
+    else:
+        return threshold.reshape(reshaping)
 
-def getFunThreshold(fr, threshold_fun, return_slice = False, space=None, dt=1, dx=1):
+def getFunThreshold(fr, threshold_array, return_slice = False, dt=1, dx=1):
     """ 
     Args:
         fr (3d array): has the format (trials, space, time)
-        threshold_fun (string): is a string math expression
+        threshold_array (array): used the function getArryFromMath(), 
+                should be an array of shape: (1, fr.shape[1], 1)
     Returns:
         first_trial: the trial that passed the threshold
         first_loc: the position at which the threshold was passed for the first
@@ -86,36 +99,32 @@ def getFunThreshold(fr, threshold_fun, return_slice = False, space=None, dt=1, d
         first_time: the time at which the threshold was passed
         activity_slices: an array of dimensions = (trials, space).
     """
-    # test with: fr = r[0,0]["firing_rate"][0,0]
-    symbolic_f = sympify("1-0.5*x/200") # equivalent to np.linspace(1, 0.5, 200)
-    symbolic_f = sympify("1*exp(-x/20) + 0.85")
-    space = np.arange(fr.shape[1])
-    numerical_f = lambdify(x, symbolic_f, 'numpy')
-    th = numerical_f(space).reshape((1, fr.shape[1],1))  
-    ## th = np.linspace(1,0.5, 200).reshape((1, 200,1)) # just to be sure
-    fr_m = fr-th
-    plt.figure()
-    plt.subplot(221)
-    plt.imshow(fr_m[0,:,:]>0)
-    plt.subplot(222)
-    plt.imshow(fr[0,:,:])
-    plt.subplot(223)
-    plt.plot(space, th.flatten())
-    plt.hlines(1, 0, 200, color='gray')
-    for i in xrange(8):
-        plt.plot(fr[0, :, 1199/(i+1)], color="black")
+#    # test with: fr = r[0,0]["firing_rate"][0,0]
+#    symbolic_f = sympify("1-0.5*x/200") # equivalent to np.linspace(1, 0.5, 200)
+#    symbolic_f = sympify("1*exp(-x/20) + 0.85")
+#    symbolic_f = sympify("1*exp(-x/20) + 0.85")
+#    space = np.arange(fr.shape[1])
+#    numerical_f = lambdify(x, symbolic_f, 'numpy')
+#    th = numerical_f(space).reshape((1, fr.shape[1],1))  
+#    ## th = np.linspace(1,0.5, 200).reshape((1, 200,1)) # just to be sure
+#    fr_m = fr-th
+#    plt.figure()
+#    plt.subplot(221)
+#    plt.imshow(fr_m[0,:,:]>0)
+#    plt.subplot(222)
+#    plt.imshow(fr[0,:,:])
+#    plt.subplot(223)
+#    plt.plot(space, th.flatten())
+#    plt.hlines(1, 0, 200, color='gray')
+#    for i in xrange(8):
+#        plt.plot(fr[0, :, 1199/(i+1)], color="black")
     # -------------------------------------------
-    symbolic_f = sympify(threshold_fun)
-    if space = None:
-        space = np.arange(fr.shape[1])
-    numerical_f = lambdify(x, symbolic_f, 'numpy')
-    threshold = numerical_f(space).reshape((1, fr.shape[1],1)
     # the idea is to subtract the threshold on the space dimension with sweep
     # then we just need to use np.where as before.
-    
-    trials = np.where(fr>0)[0] # those are the trials that passes the trhreshold
-    times = np.where(fr>0)[2]
-    locations = np.where(fr>0)[1]
+    fr_m = fr - threshold_array
+    trials = np.where(fr_m > 0)[0] # those are the trials that passes the trhreshold
+    times = np.where(fr_m > 0)[2]
+    locations = np.where(fr_m > 0)[1]
     index = np.zeros_like(np.unique(trials))
     nb_trials = 0
     for i, id in enumerate(np.unique(trials)): # note that pandas could have been used with groubby-apply
@@ -135,23 +144,39 @@ def getFunThreshold(fr, threshold_fun, return_slice = False, space=None, dt=1, d
     
 def getWeightedAverage(values, weight):
 # ---- example code (DO NOT REMOVE)
+#bb = np.load("./results_slices_exponential20threshold.npy")
+#    activity_slice = bb[7]
+#    # --- mock data ---
+#    x = np.arange(200)
+#    X, Y = np.meshgrid(x,x)
+#    activity_slice = np.exp(-(X-Y)**2/30.0**2)
+#    # --- mock data ---
 #    values = activity_slice 
 #    weight = np.arange(200)
-#    plt.subplot(311)
+#    weight = np.tile(weight, (values.shape[0], 1))
+#    plt.figure()
+#    plt.subplot(411)
 #    plt.imshow(activity_slice)
-#    plt.subplot(312)
-#    plt.imshow(np.tile(np.arange(200), (99, 1)))
-#    plt.subplot(313)
-#    plt.imshow((activity_slice * np.tile(weight, (99, 1)))/len(weight))
-#   weight = np.tile(weight, (values.shape[0], 1))
-#   av = np.sum((values * weight)/len(weight), axis=1)
-#   plt.scatter(av, np.arange(values.shape[0]))
+#    plt.subplot(412)
+#    plt.imshow(weight)
+#    plt.subplot(413)
+#    plt.imshow((activity_slice * weight))
+#   av = np.sum((values * weight), axis=1)/np.sum(weight, axis=1)
+#   av1 = np.sum((values * weight), axis=1)/np.sum(values, axis=1)
+#   plt.subplot(411)
+#   plt.scatter(av1, np.arange(values.shape[0]), c='red')
+#   plt.subplot(414)
+#   plt.plot(activity_slice[0])
+#   plt.vlines(av1[0], 0, 1)
+# ---------------------------------------------------------------
     weight = np.tile(weight, (values.shape[0], 1))
-    return np.sum((values * weight)/len(weight), axis=1)
+    return np.sum((values * weight), axis=1)/np.sum(values, axis=1)
 
     
 def loadMatFiles(regex, index=None):
     list_files = glob.glob(regex)
+    numbers = [int(re.findall(r'\d+', s)[-1]) for s in list_files]
+    list_files = [x for y, x in sorted(zip(numbers, list_files))]
     r = []
     for name in list_files:
         m = loadmat(name)

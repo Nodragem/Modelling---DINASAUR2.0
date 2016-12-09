@@ -15,6 +15,7 @@ from sympy import *
 import re
 x, y, z = symbols("x y z")
 
+# ----- example code (DO NOT REMOVE) ----    
 #r = loadmat("distances/results_1_distance.mat")
 #print r.keys()
 ## ['__function_workspace__', '__version__', 'results', '__header__', '__globals__']
@@ -26,21 +27,27 @@ x, y, z = symbols("x y z")
 #print r[0,2].dtype.names
 ## ('keys', 'values', 'target_RTs', 'distractor_RTs', 'firing_rate', 'membrane_potential')
 #print r[0,2]["keys"]
-
+# --------------------------------------
+#Piecewise((-x, x<=0)
  
 thresholds = {"flat085": "0.85",
-              "exponential20": "1*exp(-x/20) + 0.85",
+              #"exponential20": "1*exp(-x/20) + 0.85",
+              "exponential20": "Piecewise(\
+              (1*exp(x/20) + 0.85, x< 0),\
+              (1*exp(-x/20) + 0.85, x>=0) )",
               "exponential10": "1*exp(-x/10) + 0.85",
               "inverse": "1/x + 0.85"}
     
 
 def getFlatThreshold(fr, threshold, return_slice = False, dt=1, dx=1):
+    """
     # fr has the format (trials, space, time)
     # we want to return the position and the time at which the threshold 
     # was passed for the first time. That is two arrays of size len(trials).
     # we also return a slice of the activity at this time. 
     # That gives an array of dimensions = (trials, space).
-    # test with: fr = r[0,0]["firing_rate"][0,0]
+    # test with: fr = r[0,0]["firing_rate"][0,0] 
+    """
     trials = np.where(fr>0.85)[0] # those are the trials that passes the trhreshold
     times = np.where(fr>0.85)[2]
     locations = np.where(fr>0.85)[1]
@@ -54,14 +61,7 @@ def getFlatThreshold(fr, threshold, return_slice = False, dt=1, dx=1):
     first_time = times[index]*dt
     first_loc = locations[index]*dx
     first_trial = trials[index] # note that this should give np.unique(trials) if there is no omission
-    
-    if not return_slice:
-        return first_trial, first_loc, first_time
-    else:
-        # activity_slice = fr[first_trial, :, first_time] 
-        return first_trial, first_loc, first_time, fr[first_trial, :, first_time] 
-
-# ---- example code (DO NOT REMOVE) ----    
+    # ---- example code (DO NOT REMOVE) ----    
 #   activity_slice = fr[first_trial, :, first_time] 
 #    print first_time
 #    print first_loc
@@ -72,11 +72,23 @@ def getFlatThreshold(fr, threshold, return_slice = False, dt=1, dx=1):
 #    plt.imshow(fr[first_trial[34], :, :]>0.85)
 #    plt.vlines(first_time[0], ymin=0, ymax=200)
 #    plt.scatter(first_time[0], first_loc[0])
+    # --------------------------------------------
+    if not return_slice:
+        return first_trial, first_loc, first_time
+    else:
+        # activity_slice = fr[first_trial, :, first_time] 
+        return first_trial, first_loc, first_time, fr[first_trial, :, first_time] 
+
+
      
 def getArrayFromMath(expression, space, reshaping = None):
+    # ----- example code (DO NOT REMOVE) ----    
+#    expression = thresholds[threshold_type]
+#    nb_nodes = r[0]["firing_rate"][0,0].shape[1]
+#    space = np.arange(nb_nodes) - r[0]["fixation"][0,0][0,0]
+#    reshaping=(1, len(space),1)
+    #------------------
     symbolic_f = sympify(expression)
-    if space is None:
-        space = np.arange(fr.shape[1])
     numerical_f = lambdify(x, symbolic_f, 'numpy')
     threshold = numerical_f(space)
     if np.isscalar(threshold): # sympy stupidly return a scaler if the function is a constant
@@ -99,6 +111,7 @@ def getFunThreshold(fr, threshold_array, return_slice = False, dt=1, dx=1):
         first_time: the time at which the threshold was passed
         activity_slices: an array of dimensions = (trials, space).
     """
+    # ----- example code (DO NOT REMOVE) ----    
 #    # test with: fr = r[0,0]["firing_rate"][0,0]
 #    symbolic_f = sympify("1-0.5*x/200") # equivalent to np.linspace(1, 0.5, 200)
 #    symbolic_f = sympify("1*exp(-x/20) + 0.85")
@@ -152,7 +165,9 @@ def getWeightedAverage(values, weight):
 #    activity_slice = np.exp(-(X-Y)**2/30.0**2)
 #    # --- mock data ---
 #    values = activity_slice 
-#    weight = np.arange(200)
+#    offset = 50
+#    weight = np.arange(200.0) - offset
+#    weight[weight<0] = np.nan
 #    weight = np.tile(weight, (values.shape[0], 1))
 #    plt.figure()
 #    plt.subplot(411)
@@ -163,14 +178,19 @@ def getWeightedAverage(values, weight):
 #    plt.imshow((activity_slice * weight))
 #   av = np.sum((values * weight), axis=1)/np.sum(weight, axis=1)
 #   av1 = np.sum((values * weight), axis=1)/np.sum(values, axis=1)
+#    av2 = np.nansum((values * weight), axis=1)/np.nansum(values * weight/weight, axis=1)
 #   plt.subplot(411)
-#   plt.scatter(av1, np.arange(values.shape[0]), c='red')
+#   plt.scatter(av2+offset, np.arange(200), c='red')
 #   plt.subplot(414)
 #   plt.plot(activity_slice[0])
-#   plt.vlines(av1[0], 0, 1)
+#   plt.vlines(av1[0]+offset, 0, 1)
 # ---------------------------------------------------------------
     weight = np.tile(weight, (values.shape[0], 1))
-    return np.sum((values * weight), axis=1)/np.sum(values, axis=1)
+    # we accept nan for the weight, so that the colliculus mays not consider one of its side
+    return np.nansum((values * weight), axis=1)/np.sum(values, axis=1)
+#    USE IF nan IN WEIGHT:
+#        np.nansum((values * weight), axis=1)/np.nansum(values *  np.isfinite(weight), axis=1)
+
 
     
 def loadMatFiles(regex, index=None):

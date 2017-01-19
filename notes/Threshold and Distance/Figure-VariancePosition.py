@@ -114,7 +114,10 @@ plt.tight_layout()
 
 
 # plt.figure()
-# r = loadMatFiles("./distances/results_*_distance.mat")
+import time
+t0 = time.time()
+r = loadMatFiles("../../results/distances/results_*_distance.mat")
+print time.time() - t0
 # for i, pos in enumerate(np.sort(df["TargetPosition"].unique())):
 #    plt.subplot(4, 2, i+1)
 #    trial = 34

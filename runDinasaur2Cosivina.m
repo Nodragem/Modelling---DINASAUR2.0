@@ -102,7 +102,11 @@ sim = Simulator();
 sim.addElement(CustomBakedInput1D('input map', I_map, 0)); % will read the input
 sim.addElement(NeuralField_modified('motor map', fieldSize, tau_u, 0, @sigmoid, {beta, 0}), ...
                           {'input map'});
-sim.addElement(GaussKernel1D('mm -> mm', fieldSize, sigma_w, A, I, true, false, inf), ...
+% -- use convolution (less memory, but slower):
+% sim.addElement(GaussKernel1D('mm -> mm', fieldSize, sigma_w, A, I, true, false, 5), ...
+%     'motor map', 'output', 'motor map');
+% -- use matrix weight (more memory, but faster ?? or not):
+sim.addElement(WeightMatrix('mm -> mm', gaussianConnection1D(fieldSize, sigma_w, A, I)), ...
     'motor map', 'output', 'motor map');
 sim.addElement(NormalNoise('noise u', fieldSize, noise_amplitude), [], [], 'motor map');
 recordingTimes = 1:1:nstep;
@@ -121,4 +125,3 @@ end
 % - either change the convolution with fixed weight to see if
 %     that improves of performance
 % - or try to remove the inf cutt-off in the GaussKernel1D set up.
-

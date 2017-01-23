@@ -1,7 +1,8 @@
 clearvars;
 close all;
-addpath('util')
-mkdir('./results', 'distances_test')
+addpath('util');
+addpath('/home/c1248317/matlab/cosivina');
+mkdir('./results', 'distances_test');
 % Initially the model was made to explain the behavior of human participants
 % during an experiment where we present them a target and a distractor.
 % the experiment consist of a lot of trials of ~1s. From which we estimate the reaction time distributions.
@@ -41,7 +42,7 @@ for row = 1:size(sim_values, 1) % we run only 1 simulation of 100 iterations/tri
     results.firing_rate = rall;
     % note that we can transform the firing rate to membrane potential with
     % an inverse function.
-    save(['./results/distances/results_', num2str(row), '_distance.mat'], 'results')
+    save(['./results/distances_test/results_', num2str(row), '_distance.mat'], 'results')
     disp('time saving data')
     toc
 

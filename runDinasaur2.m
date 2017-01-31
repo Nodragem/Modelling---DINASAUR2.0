@@ -52,7 +52,7 @@ A=40; % amplitude excitation
 I=55; % amplitude of global inhibition
 sig_w = 14.0; % corresponds to the 0.7 mm in the SC (see function doc for metrics) as in Trappenberg 2001
 % this will compute the connection matrix (N x N matrix if N is the number of neurons):
-w = gaussianConnection1D(nn, sig_w, A, I) * node_to_radian; % to keep things as in Trappenberg
+weight_matrix = gaussianConnection1D(nn, sig_w, A, I) * node_to_radian; % to keep things as in Trappenberg
 noise_amplitude = args{1, 'noise_amplitude'};
 noise_start = 200; % ms
 
@@ -108,17 +108,11 @@ nb_trials = args{1, 'nbTrials'};
 rall = zeros([nb_trials, nn, nstep]);
 uall = zeros([nb_trials, nn, nstep]);
 for trial=1:nb_trials;
-  % note that the model was initially run twice for each iteration/trial,
-  % in order to compute a control trial (rall_no) for each trial (rall).
-
     %% SIMULATION:
-    noise_t = [zeros(noise_start, nn); noise_amplitude*randn(nstep - noise_start, nn)]'; % was bugged in Aline code
-    % -- I removed the computation of the control trial:
-    [r, u] = computeNeuralFieldStep(nstep, zeros(nn, 1)-10, w, I_map, noise_t, tau_u, beta, nn);
-    
+    [r, u] = computeNeuralFieldStep(nstep, zeros(nn, 1)-10, weight_matrix,
+    I_map, noise_amplitude, noise_start, tau_u, beta, nn);
     %% EXTRACT RESULTS:
     rall(trial, :, :) = r;
     uall(trial, :, :) = u;
-
 end
 return

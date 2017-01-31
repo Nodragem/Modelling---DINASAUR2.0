@@ -1,7 +1,7 @@
  function y = mirrorGaussian(loc, ampl, sig, nn)
     y = zeros(nn, 1);
     for i = 1:nn;
-         di = min( abs(i - loc), 2*pi - abs(i - loc) );
+         di = min( abs(i - loc), nn - abs(i - loc) );
          y(i) = ampl*exp( -di^2 / (2*sig^2) );
     end
  return

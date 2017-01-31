@@ -9,7 +9,8 @@ from scipy.io import loadmat
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import os
+import os, sys
+sys.path.append('/home/c1248317/Bitbucket/Dinasaur/notes/Threshold and Distance')
 from modtools import *
 
 threshold_type = "flat085"
@@ -27,7 +28,7 @@ fix_loc = 50
 space = np.arange(nb_nodes) - fix_loc # that is ridiculous ...
 weight_array = getArrayFromMath("x", space)
 #weight_array = getArrayFromMath("Piecewise((x, x>0),(0, x<=0))", space)
-threshold_array = getArrayFromMath(thresholds[threshold_type], 
+threshold_array = getArrayFromMath(thresholds[threshold_type],
                                    space, reshaping=(len(space),1))
 # we accept nan for the weight, so that the colliculus mays not consider one of its side
 # weight_array[0:fix_loc] = np.nan # CHECK THE AVERAGING FUNCTION IF YOU ACTIVATE THIS LINE
@@ -35,9 +36,9 @@ threshold_array = getArrayFromMath(thresholds[threshold_type],
 for i in xrange(8):
     print "distance", i
     pos_sacc = getWeightedAverage(slices[i], weight_array)
-    select = (df.ID >= i*nb_trials) & (df.ID < (i+1)*nb_trials)    
+    select = (df.ID >= i*nb_trials) & (df.ID < (i+1)*nb_trials)
     trials_passed = df["ampAveraging"].notnull() & select
-    df.ix[trials_passed, "ampAveraging"] = pos_sacc 
+    df.ix[trials_passed, "ampAveraging"] = pos_sacc
 
 print ("plotting data ...")
 
@@ -75,7 +76,7 @@ plt.vlines(pos_sacc[0] + fix_loc, 0, 1)
 plt.vlines(smooth_mean + fix_loc, 0, 1, color='red')
 plt.hlines(0, 0, 200)
 print pos_sacc
-
+plt.show()
 
 # Figure 3 -------------
 # that shows the correlation RT / position for the Winner and the Averaging position
@@ -132,5 +133,3 @@ print time.time() - t0
 # plt.tight_layout()
 
 plt.show()
-    
-    

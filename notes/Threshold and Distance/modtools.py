@@ -12,7 +12,7 @@ from sympy import *
 import re
 x, y, z = symbols("x y z")
 
-# ----- example code (DO NOT REMOVE) ----    
+# ----- example code (DO NOT REMOVE) ----
 #r = loadmat("distances/results_1_distance.mat")
 #print r.keys()
 ## ['__function_workspace__', '__version__', 'results', '__header__', '__globals__']
@@ -26,7 +26,7 @@ x, y, z = symbols("x y z")
 #print r[0,2]["keys"]
 # --------------------------------------
 #Piecewise((-x, x<=0)
- 
+
 thresholds = {"flat085": "0.85",
               #"exponential20": "1*exp(-x/20) + 0.85",
               "exponential20": "Piecewise(\
@@ -34,16 +34,16 @@ thresholds = {"flat085": "0.85",
               (1*exp(-x/20) + 0.85, x>=0) )",
               "exponential10": "1*exp(-x/10) + 0.85",
               "inverse": "1/x + 0.85"}
-    
+
 
 def getFlatThreshold(fr, threshold, return_slice = False, dt=1, dx=1):
     """
     # fr has the format (trials, space, time)
-    # we want to return the position and the time at which the threshold 
+    # we want to return the position and the time at which the threshold
     # was passed for the first time. That is two arrays of size len(trials).
-    # we also return a slice of the activity at this time. 
+    # we also return a slice of the activity at this time.
     # That gives an array of dimensions = (trials, space).
-    # test with: fr = r[0,0]["firing_rate"][0,0] 
+    # test with: fr = r[0,0]["firing_rate"][0,0]
     """
     trials = np.where(fr>0.85)[0] # those are the trials that passes the trhreshold
     times = np.where(fr>0.85)[2]
@@ -54,17 +54,17 @@ def getFlatThreshold(fr, threshold, return_slice = False, dt=1, dx=1):
         # we use i and id because there maybe trials that did not reach the threshold
         index[i,] = np.argmin(times[(trials==id)]) + nb_trials
         nb_trials += len(times[(trials==id)])
-            
+
     first_time = times[index]*dt
     first_loc = locations[index]*dx
     first_trial = trials[index] # note that this should give np.unique(trials) if there is no omission
-    # ---- example code (DO NOT REMOVE) ----    
-#   activity_slice = fr[first_trial, :, first_time] 
+    # ---- example code (DO NOT REMOVE) ----
+#   activity_slice = fr[first_trial, :, first_time]
 #    print first_time
 #    print first_loc
 #    plt.imshow(activity_slice)
 #    plt.scatter(first_loc, first_trial)
-#    plt.imshow(fr[34, :, :]) 
+#    plt.imshow(fr[34, :, :])
 #    # use first_trial[] to avoid problem with trial where the threshold was not reached
 #    plt.imshow(fr[first_trial[34], :, :]>0.85)
 #    plt.vlines(first_time[0], ymin=0, ymax=200)
@@ -73,13 +73,13 @@ def getFlatThreshold(fr, threshold, return_slice = False, dt=1, dx=1):
     if not return_slice:
         return first_trial, first_loc, first_time
     else:
-        # activity_slice = fr[first_trial, :, first_time] 
-        return first_trial, first_loc, first_time, fr[first_trial, :, first_time] 
+        # activity_slice = fr[first_trial, :, first_time]
+        return first_trial, first_loc, first_time, fr[first_trial, :, first_time]
 
 
-     
+
 def getArrayFromMath(expression, space, reshaping = None):
-    # ----- example code (DO NOT REMOVE) ----    
+    # ----- example code (DO NOT REMOVE) ----
 #    expression = thresholds[threshold_type]
 #    nb_nodes = r[0]["firing_rate"][0,0].shape[1]
 #    space = np.arange(nb_nodes) - r[0]["fixation"][0,0][0,0]
@@ -96,10 +96,10 @@ def getArrayFromMath(expression, space, reshaping = None):
         return threshold.reshape(reshaping)
 
 def getFunThreshold(fr, threshold_array, return_slice = False, dt=1, dx=1):
-    """ 
+    """
     Args:
         fr (3d array): has the format (trials, space, time)
-        threshold_array (array): used the function getArryFromMath(), 
+        threshold_array (array): used the function getArryFromMath(),
                 should be an array of shape: (1, fr.shape[1], 1)
     Returns:
         first_trial: the trial that passed the threshold
@@ -108,14 +108,14 @@ def getFunThreshold(fr, threshold_array, return_slice = False, dt=1, dx=1):
         first_time: the time at which the threshold was passed
         activity_slices: an array of dimensions = (trials, space).
     """
-    # ----- example code (DO NOT REMOVE) ----    
+    # ----- example code (DO NOT REMOVE) ----
 #    # test with: fr = r[0,0]["firing_rate"][0,0]
 #    symbolic_f = sympify("1-0.5*x/200") # equivalent to np.linspace(1, 0.5, 200)
 #    symbolic_f = sympify("1*exp(-x/20) + 0.85")
 #    symbolic_f = sympify("1*exp(-x/20) + 0.85")
 #    space = np.arange(fr.shape[1])
 #    numerical_f = lambdify(x, symbolic_f, 'numpy')
-#    th = numerical_f(space).reshape((1, fr.shape[1],1))  
+#    th = numerical_f(space).reshape((1, fr.shape[1],1))
 #    ## th = np.linspace(1,0.5, 200).reshape((1, 200,1)) # just to be sure
 #    fr_m = fr-th
 #    plt.figure()
@@ -141,15 +141,15 @@ def getFunThreshold(fr, threshold_array, return_slice = False, dt=1, dx=1):
         # we use i and id because there maybe trials that did not reach the threshold
         index[i,] = np.argmin(times[(trials==id)]) + nb_trials
         nb_trials += len(times[(trials==id)])
-            
+
     first_time = times[index]*dt
     first_loc = locations[index]*dx
     first_trial = trials[index] # note that this should give np.unique(trials) if there is no omission
-    
+
     if not return_slice:
         return first_trial, first_loc, first_time
     else:
-        # activity_slice = fr[first_trial, :, first_time] 
+        # activity_slice = fr[first_trial, :, first_time]
         return first_trial, first_loc, first_time, fr[first_trial, :, first_time]
 
 
@@ -238,7 +238,7 @@ def getWeightedAverage(values, weight):
 #    X, Y = np.meshgrid(x,x)
 #    activity_slice = np.exp(-(X-Y)**2/30.0**2)
 #    # --- mock data ---
-#    values = activity_slice 
+#    values = activity_slice
 #    offset = 50
 #    weight = np.arange(200.0) - offset
 #    weight[weight<0] = np.nan
@@ -266,7 +266,7 @@ def getWeightedAverage(values, weight):
 #        np.nansum((values * weight), axis=1)/np.nansum(values *  np.isfinite(weight), axis=1)
 
 
-    
+
 def loadMatFiles(regex, index=None):
     list_files = glob.glob(regex)
     numbers = [int(re.findall(r'\d+', s)[-1]) for s in list_files]

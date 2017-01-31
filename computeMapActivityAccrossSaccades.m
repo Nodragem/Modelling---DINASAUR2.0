@@ -1,10 +1,11 @@
-function [firingrate, membrane_potential] = computeMapActivityAccrossSaccades(nstep, u_zero, mat_connections, input, noise_t, tau, beta, field_size);
+function [firingrate, membrane_potential] = computeMapActivityAccrossSaccades(nstep,
+  u_zero, mat_connections, input_map, noise_amplitude, noise_start, tau, beta, field_size)
    % This code simulates a 1D neural field that represents the SC s activation during a saccade sequence dynamic.
    % The model simulates:
-   %  - natural/automatic spatial drifts in the input, 
-   %  - triggers automatic micro-saccades 
-   %  - triggers reflexives macro-saccades, 
-   %  - update its new fixation location after a saccade/drift, 
+   %  - natural/automatic spatial drifts in the input,
+   %  - triggers automatic micro-saccades
+   %  - triggers reflexives macro-saccades,
+   %  - update its new fixation location after a saccade/drift,
    %  - update of the input s locations and activity accoring to the new fixation location.
    % the model uses -
    %  - an unhomogenous and stochastic threshold to trigger saccades
@@ -35,20 +36,46 @@ function [firingrate, membrane_potential] = computeMapActivityAccrossSaccades(ns
    % firingrate: (type matrix)
    %	describes the firing rate of all the neurons of the field (rows) for all the time steps (columns)
    % -----------------------------------------------------------------------------------------------------------
-   tau_inv = 1./tau;      % inverse time constant
-   model_fixation = 50; 
-   sum_input = input(:, 1:nstep) + noise_t(:, 1:nstep);
+   tau_inv = 1./tau;            % inverse time constant
+   model_fixation_pole = 50;    % [constant] analogous to the rostral pole of the SC
+   center_of_gaze = 50;         % [variable] analogous to the center of gaze
+   % the center of gaze projects on the fixation pole, while the center_of_gaze can vary
    firingrate = zeros(field_size, nstep);
    membrane_potential = zeros(field_size, nstep);
+   record_gaze = zeros([1000, 1]);
+   record_fixation_map = zeros([1000, 100]);
+   noise_map = [zeros(noise_start, nn); noise_amplitude*randn(nstep - noise_start, nn)]'; % was bugged in Aline code
+   border = (size(input_map, 1) - field_size)/2
+   if border < 0
+     disp('ERROR: input_map is smaller than the dynamic neural field')
    % we initialize the neural field at time t_0:
    u = u_zero;
-   r = 1 ./ (1 + exp(-beta*u));  firingrate(:,1)=r;
+   r = 1 ./ (1 + exp(-beta*u));
    % Loop Euler Method:
    for t=1:nstep
-     u = u + tau_inv * (sum_input(:,t) - u + mat_connections * r); % u is the current membrane potential
+     projected_input = projectInput(input_map, border, field_size, center_of_gaze - model_fixation_pole)
+     u = u + tau_inv * (projected_input(:,t) + noise_map(:, t) - u + mat_connections * r); % u is the current membrane potential
      r = 1 ./ (1 + exp(-beta*u));
      firingrate(:,t) = r;
      membrane_potential(:, t) = u;
+     %% check if saccade with stochastic threshold
+     % if yes:
+     %    compute the saccadic vector
+     %    update center_of_gaze position
+     %% if not:
+     %    compute fixation drift
+     %    update center_of_gaze position
+     % then: move the inputs according to new center_of_gaze (from drift/saccade)
+     if isStochasticThresholdPassed(firingrate);
+       saccadic_vector = getSaccadicVector(firingrate);
+       center_of_gaze = center_of_gaze + saccadic_vector;
+     else
+       [fix_map, center_of_gaze] = getEyesDrift(center_of_gaze, field_size, model_fixation_pole);
+     end
+     record_gaze(i, :) = gaze;
+     record_fixation_map(i, :) = map;
+
+
    end
 
 %% Geoffrey: line 36

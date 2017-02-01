@@ -120,8 +120,3 @@ for trial=1:nb_trials;
     sim.run(nstep);
     rall(trial, :, :) = sim.getComponent('record', 'output')';
 end
-
-%% TODO NEXT:
-% - either change the convolution with fixed weight to see if
-%     that improves of performance
-% - or try to remove the inf cutt-off in the GaussKernel1D set up.

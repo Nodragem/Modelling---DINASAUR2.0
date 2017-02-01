@@ -167,40 +167,40 @@ def getFunStochThreshold(fr, threshold_array, escape_func = None, return_slice=F
         activity_slices: an array of dimensions = (trials, space).
     """
     # ----- example code (DO NOT REMOVE) ----
-    fr = r[7]["firing_rate"][0,0]
-    x = np.arange(-2, 0.15, 0.01)
-    plt.figure()
-    plt.subplot(211)
-    plt.plot(x, 1 - np.exp(-1 / 0.5 * np.exp(10. * x)))
-    plt.plot(x, 1 - np.exp(-1 / 0.5 * np.exp(5. * x)))
-    plt.plot(x, 1 - np.exp(-1 / 0.5 * np.exp(3. * x)))
-    symbolic_f = sympify("Piecewise(\
-              (1*exp(y/20) + 0.85, y< 0),\
-              (1*exp(-y/20) + 0.85, y>=0) )")
-    space = np.arange(fr.shape[1]) - 50
-    numerical_f = lambdify(y, symbolic_f, 'numpy')
-    threshold_array = numerical_f(space).reshape((1, fr.shape[1],1))
-    plt.subplot(212)
-    plt.plot(space, threshold_array.flatten())
-    dt =1
-    tau = 0.5
-    beta = 10.
-    escape_func = lambda x: 1 / tau * np.exp(beta * x)
-    distance = fr - threshold_array
-    escape_prob = 1 - np.exp(-dt * escape_func(distance))
-    triggered = np.random.uniform(low=0.0, high=1.0, size=escape_prob.shape) < escape_prob
-    plt.figure()
-    plt.subplot(311)
-    plt.imshow(distance[60, :, :], vmin=-2, vmax=2, cmap='seismic')
-    plt.subplot(312)
-    plt.imshow(escape_prob[60, :, :], vmin=0, vmax=1)
-    plt.subplot(313)
-    plt.imshow(triggered[60, :, :], vmin=0, vmax=1)
+    # fr = r[7]["firing_rate"][0,0]
+    # x = np.arange(-2, 0.15, 0.01)
+    # plt.figure()
+    # plt.subplot(211)
+    # plt.plot(x, 1 - np.exp(-1 / 0.5 * np.exp(10. * x)))
+    # plt.plot(x, 1 - np.exp(-1 / 0.5 * np.exp(5. * x)))
+    # plt.plot(x, 1 - np.exp(-1 / 0.5 * np.exp(3. * x)))
+    # symbolic_f = sympify("Piecewise(\
+    #           (1*exp(y/20) + 0.85, y< 0),\
+    #           (1*exp(-y/20) + 0.85, y>=0) )")
+    # space = np.arange(fr.shape[1]) - 50
+    # numerical_f = lambdify(y, symbolic_f, 'numpy')
+    # threshold_array = numerical_f(space).reshape((1, fr.shape[1],1))
+    # plt.subplot(212)
+    # plt.plot(space, threshold_array.flatten())
+    # dt =1
+    # tau = 0.5
+    # beta = 10.
+    # escape_func = lambda x: 1 / tau * np.exp(beta * x)
+    # distance = fr - threshold_array
+    # escape_prob = 1 - np.exp(-dt * escape_func(distance))
+    # triggered = np.random.uniform(low=0.0, high=1.0, size=escape_prob.shape) < escape_prob
+    # plt.figure()
+    # plt.subplot(311)
+    # plt.imshow(distance[60, :, :], vmin=-2, vmax=2, cmap='seismic')
+    # plt.subplot(312)
+    # plt.imshow(escape_prob[60, :, :], vmin=0, vmax=1)
+    # plt.subplot(313)
+    # plt.imshow(triggered[60, :, :], vmin=0, vmax=1)
 
     # this value is interesting, as the prob to fire is not 100% when we are at 1
 
     # -------------------------------------------
-    # TODO NEXT: think of a way to return when we did saccade, maybe the slices also
+    # TODO CANCELED: think of a way to return when we did saccade, maybe the slices also
     # some thing like:
     # TRIAL, SACC_TIMES, WINNER_LOCATION, AVERAGING_LOCATION \ SLICES
     if escape_func is None:
@@ -262,6 +262,7 @@ def getWeightedAverage(values, weight):
     weight = np.tile(weight, (values.shape[0], 1))
     # we accept nan for the weight, so that the colliculus mays not consider one of its side
     return np.nansum((values * weight), axis=1)/np.sum(values, axis=1)
+    # DONT FORGET TO ADD THE FIXATION LOCATION TO THE AVERAGE
 #    USE IF nan IN WEIGHT:
 #        np.nansum((values * weight), axis=1)/np.nansum(values *  np.isfinite(weight), axis=1)
 

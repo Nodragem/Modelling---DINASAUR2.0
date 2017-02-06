@@ -1,3 +1,5 @@
+clearvars;
+addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
 NN = 100;
 fixation = 50;
 gaze = 50;

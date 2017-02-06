@@ -85,10 +85,10 @@ function [firingrate, membrane_potential] = computeMapActivityAccrossSaccades(ns
     membrane_potential(:, t) = u;
     % we check whether there are locations where the threshold was passed:
     triggered_locations = applyStochasticThreshold(firingrate);
-    if isempty(triggered_locations);
+    if ~isempty(triggered_locations);
      % if yes: compute the saccadic vector, update center_of_gaze position
      % NEXT: implement getSaccadicVector()
-     saccadic_vector = getSaccadicVector(firingrate);
+     saccadic_vector = getSaccadicVector(firingrate); % FIXME: we may need to pass the winner, so that we can decrease the weight of other...
      center_of_gaze = center_of_gaze + saccadic_vector;
     else
      % if not: compute fixation drift, update center_of_gaze position

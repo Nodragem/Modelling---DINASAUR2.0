@@ -1,4 +1,5 @@
-addpath(genpath('/home/c1248317/Bitbucket/Dinasaur/home/c1248317/Bitbucket/Dinasaur'))
+clearvars;
+addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
 fixation_pole = 60;
 fixation = mirrorGaussian(fixation_pole, 0, 5, 120)';
 target = mirrorGaussian(30, 1, 5, 120)';

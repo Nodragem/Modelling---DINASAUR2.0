@@ -1,4 +1,5 @@
 clearvars;
+clear functions;
 close all;
 addpath('util');
 addpath('/home/c1248317/matlab/cosivina');

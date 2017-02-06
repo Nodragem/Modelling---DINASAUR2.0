@@ -5,6 +5,6 @@ function probability = escapeProbabilityFunction(distance, tau, beta0, dt)
     % shape of the escape function (proba to trigger)
     % see plot above, in real neurons it can be 19 ms and 4 mV
     escape_rate = 1 / tau * exp(beta0 * x);
-  end  
+  end
   probability = 1 - exp(-dt * escape_func(distance) );
 end

@@ -1,3 +1,5 @@
+clearvars;
+addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
 fix_conn = mirrorGaussian(60, 1, 14, 120)';
 plot(fix_conn, 'ro')
 hold on

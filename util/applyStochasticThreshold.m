@@ -16,7 +16,11 @@ function [locations, threshold, escape_prob] = applyStochasticThreshold(fr, fixa
   if isempty(first_time)
     first_time = false;
     x = (1:field_size) - fixation_pole;
-    tau = 0.1; beta0 = 10.0;
+    % old: tau = 0.1; beta0 = 10.0;
+    % best fit from oroginal DINASAUR (see branch noiseparameters):
+    % tau = 1.3586 and beta0 = 11.4967
+    % manually adjusted from best fit: tau = 1.4 and beta0 = 10
+    tau = 1.4; beta0 = 10.0;
     threshold_func = zeros(1, field_size);
     threshold_func(1, 1:fixation_pole) = exp(x(1:fixation_pole)/20) + .85; % + 0.85 by default
     threshold_func(1, fixation_pole:end) = exp(-x(fixation_pole:end)/20) + .85;
@@ -37,7 +41,7 @@ function [locations, threshold, escape_prob] = applyStochasticThreshold(fr, fixa
     title('threshold distance')
 
     subplot(2, 2, 3)
-    plot(10 / tau * exp(beta0 .* dista));
+    plot(1 / tau * exp(beta0 .* dista));
     hold on
     plot(escapeProbabilityFunction(dista, tau, beta0, dt), 'r')
     title('probability to trigger (on the map)')
@@ -48,8 +52,8 @@ function [locations, threshold, escape_prob] = applyStochasticThreshold(fr, fixa
     title({'probability to trigger', '(according to distance from threshold)'})
   end
   threshold = threshold_func; % DON'T REMOVE: that is for the output
-  distance = (fr - threshold_func)./threshold_func;
-  % distance = fr - threshold_func;
+  %distance = (fr - threshold_func)./threshold_func;
+  distance = fr - threshold_func;
   % REMEMBER: the distance is negative when under threshold
   % REMEMBER: we use the relative distance from the threshold
   escape_prob = escapeProbabilityFunction(distance, tau, beta0, dt);

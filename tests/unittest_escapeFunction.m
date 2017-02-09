@@ -1,3 +1,4 @@
+% test and showcase the function escapeProbabilityFunction.m
 clearvars;
 clear functions;
 addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))

@@ -1,3 +1,4 @@
+% test and showcase the function getEyesDrift.m
 clearvars;
 addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
 NN = 100;

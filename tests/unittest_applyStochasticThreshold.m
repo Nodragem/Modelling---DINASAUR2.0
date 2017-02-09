@@ -1,15 +1,16 @@
+% test and showcase the function applyStochasticThreshold.m
 clearvars;
 clear applyStochasticThreshold;
 addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
 % shuffle the random generator of MATLAB to avoid to get the same results
 %rng('shuffle');
 
-fixation_pole = 60;
-field_size = 120;
+fixation_pole = 100;
+field_size = 200;
 dt = 1;
 fixation = mirrorGaussian(fixation_pole, 1, 5, field_size)';
-target = mirrorGaussian(30, 1, 10, field_size)';
-distractor = mirrorGaussian(90, 0.7, 5, field_size)';
+target = 0*mirrorGaussian(50, 1, 10, field_size)';
+distractor = 0*mirrorGaussian(150, 0.7, 5, field_size)';
 
 % we want a stochastic threshold that produces:
 % - 1-2 microsaccades (saccade at the fixation) per seconds
@@ -39,7 +40,7 @@ ylabel('Space (nodes)')
 xlabel('Activity or Time (seconds)')
 hold on
 plot(threshold*nb_simulations/4/1000, 1:field_size)
-line([nb_simulations/4/1000, nb_simulations/4/1000], [0, 120])
+line([nb_simulations/4/1000, nb_simulations/4/1000], [0, field_size])
 plot( (1:nb_simulations)/1000, locations, 'r.')
 subplot(1,2,2)
 [f, x] = hist(locations, 100);

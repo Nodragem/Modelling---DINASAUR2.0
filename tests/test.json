@@ -1,0 +1,8 @@
+{
+  "name": 2,
+  "color": "blue",
+  "par1": [1, 2, 2, 8, 5],
+  "dict": {
+    "name": ["Geoffrey", "Geoffrey2"]
+  }
+}

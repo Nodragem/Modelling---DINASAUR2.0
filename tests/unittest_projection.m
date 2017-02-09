@@ -1,3 +1,4 @@
+% test and showcase the function projectInput.m
 clearvars;
 addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
 fix_conn = mirrorGaussian(60, 1, 14, 120)';

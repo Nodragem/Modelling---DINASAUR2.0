@@ -1,4 +1,5 @@
-function [firingrate, membrane_potential] = computeNeuralFieldStep(nstep, u_zero, mat_connections, input, noise_t, tau, beta, field_size);
+function [firingrate, membrane_potential] = computeNeuralFieldStep(nstep, u_zero,...
+   mat_connections, input_map, noise_t, tau, beta, field_size)
    % simulate a 1D neural field
    % we run a loop to compute the neural field firing rate evolution over all the time steps
    % Method d'Euler: g(t+1) = g(n) + dg/dt
@@ -12,7 +13,7 @@ function [firingrate, membrane_potential] = computeNeuralFieldStep(nstep, u_zero
    % mat_connection: (type matrix)
    %	the row i describes the connection of the neuron i with its neighbours (columns)
    % input_exo, input_endo: (type matrix)
-   %	value of the input over time step (columns) and space (rows)
+   %	value of the input_map over time step (columns) and space (rows)
    % tau: (type float)
    %	time constant of the neurons
    % beta: (type float)
@@ -26,7 +27,7 @@ function [firingrate, membrane_potential] = computeNeuralFieldStep(nstep, u_zero
    %	describes the firing rate of all the neurons of the field (rows) for all the time steps (columns)
    % -----------------------------------------------------------------------------------------------------------
    tau_inv = 1./tau;      % inverse time constant
-   sum_input = input(:, 1:nstep) + noise_t(:, 1:nstep);
+   sum_input = input_map(:, 1:nstep) + noise_t(:, 1:nstep);
    firingrate = zeros(field_size, nstep);
    membrane_potential = zeros(field_size, nstep);
    % we initialize the neural field at time t_0:

@@ -2,13 +2,13 @@
 % Modified and Adapted from the original code of Trappenberg et al. (2001)
 % By Aline Bompas (2010-2011-2015) and Geoffrey Megardon (2016-2017).
 % ----------------------------------------------------------------------------
-function [rall, uall]= runDinasaur2(args)
+function rall = runDinasaurCosivina(args)
 % The following code is running of a 1D DNF with mutual inhibition to simulate the
 % motor map of the visuo-oculomotor system.
 % Several iterations are run to create distributions of RT/landing positions.
 % Metric:
 % ----------
-% node_to_radian = 2*pi/nn;   % if multiply, transform nb. nodes to radians, if divide, transform radians to nb. nodes.
+% node_to_radian = 2*pi/fieldSize;   % if multiply, transform nb. nodes to radians, if divide, transform radians to nb. nodes.
 % mm_to_radian = 2*pi/10;     % similar as above, Trappenberg. assumes a size of 10 mm of the SC/DNF
 %
 % Parameters:
@@ -35,12 +35,8 @@ randn('state', 10000); %sum(100*clock));
 %% SET UT PARAMETER OF THE DNF:
 ini_thres=.85; % not used for now
 % number of nodes:
-nn = 200;
-node_to_radian = 2*pi/nn; % need to keep the metric for now
-% ---------
-%FIXME: replace A and I by 1.2566 and 1.7279 to get rid of the metric
-% system
-% ----------
+fieldSize = 200;
+node_to_radian = 2*pi/fieldSize; %FIXME: replace A and I by 1.2566 and 1.7279 to get rid of the metric system
 % delta exo and delta endo are the delay between stimulus appearance and exogenous/endogenous signals
 dexo=50; dendo=75; non_decision_time=20;
 % time constant of memb. potential and of inputs:
@@ -48,14 +44,12 @@ tau_u=10; tau_on=10; tau_off=1;
 % slope of the gain function:
 beta=0.07;
 % parameters of lateral connections:
-A=40; % amplitude excitation
-I=55; % amplitude of global inhibition
-sig_w = 14.0; % corresponds to the 0.7 mm in the SC (see function doc for metrics) as in Trappenberg 2001
+A = 40 * node_to_radian; % amplitude excitation
+I = 55 * node_to_radian; % amplitude of global inhibition
+sigma_w = 14.0; % corresponds to the 0.7 mm in the SC (see function doc for metrics) as in Trappenberg 2001
 % this will compute the connection matrix (N x N matrix if N is the number of neurons):
-weight_matrix = gaussianConnection1D(nn, sig_w, A, I) * node_to_radian; % to keep things as in Trappenberg
+% NOT NEEDED: w = gaussianConnection1D(fieldSize, sig_w, A, I) * node_to_radian; % to keep things as in Trappenberg
 noise_amplitude = args{1, 'noise_amplitude'};
-noise_start = 200; % ms
-
 
 %% SET UT INPUT LOCATIONS:
 % now the locations are specified in model nodes, the metrics should be encapsulated in
@@ -77,7 +71,7 @@ step_simulation = 1; % millisecond for us
 time = 1:step_simulation:end_simulation;
 nstep=size(time, 2);
 
-%% CONNECTIONS OF THE INPUTS WITH THE DNF:
+%% PROJECTIONS OF THE INPUTS ONTO THE DNF:
 % make gaussian shapes at the target, distractor and fixation locations.
 % here the parameters of the gaussian (sigma and amplitudes):
 sig = 14.0; % corresponds to 0.7 mm on the SC (see function doc for metrics) as in Trappenberg 2001
@@ -85,9 +79,9 @@ aendo_fix  = 10; aendo_fix_gap  = 3; aexo_fix  = 10;
 aendo_targ = 14; aendo_targ_gap = 0; aexo_targ = 80;
 aendo_dist = 14; aendo_dist_gap = 0; aexo_dist = aexo_targ;
 % note that if the weights below equals zero, that cancels the values above
-fix_conn = mirrorGaussian(loc_fix, args{1, 'FixationWeight'}, sig, nn)';
-targ_conn = mirrorGaussian(loc_targ, args{1, 'TargetWeight'}, sig, nn)';
-dist_conn = mirrorGaussian(loc_dist, args{1, 'DistractorWeight'}, sig, nn)';
+fix_conn = mirrorGaussian(loc_fix, args{1, 'FixationWeight'}, sig, fieldSize)';
+targ_conn = mirrorGaussian(loc_targ, args{1, 'TargetWeight'}, sig, fieldSize)';
+dist_conn = mirrorGaussian(loc_dist, args{1, 'DistractorWeight'}, sig, fieldSize)';
 I_conn = [fix_conn; targ_conn; dist_conn]';
 
 %% CREATION OF THE INPUT SIGNAL TO THE DNF:
@@ -99,20 +93,30 @@ I_dist = stepFunction(time, aendo_dist, dist_on + dendo, dist_off + dendo)...
          + expDecrease(time, aexo_dist, dist_on + dexo, tau_on);
 I_all = [I_fix; I_targ; I_dist];
 I_map = I_conn * I_all; % the time course of I_fix (col 1) will  be mapped to the connection pattern if fix_conn (row 1), etc...
-% figure();
-% surf(I_conn * I_all, 'EdgeColor','none','LineStyle','none','FaceLighting','phong')
+%figure();
+%surf(I_conn * I_all, 'EdgeColor','none','LineStyle','none','FaceLighting','phong')
 
+%% CREATION OF THE DNF:
+% create simulator object
+sim = Simulator();
+sim.addElement(CustomBakedInput1D('input map', I_map, 0)); % will read the input
+sim.addElement(NeuralField_modified('motor map', fieldSize, tau_u, 0, @sigmoid, {beta, 0}), ...
+                          {'input map'});
+% -- use convolution (less memory, but slower):
+% sim.addElement(GaussKernel1D('mm -> mm', fieldSize, sigma_w, A, I, true, false, 5), ...
+%     'motor map', 'output', 'motor map');
+% -- use matrix weight (more memory, but faster ?? or not):
+sim.addElement(WeightMatrix('mm -> mm', gaussianConnection1D(fieldSize, sigma_w, A, I)), ...
+    'motor map', 'output', 'motor map');
+sim.addElement(NormalNoise('noise u', fieldSize, noise_amplitude), [], [], 'motor map');
+recordingTimes = 1:1:nstep;
+sim.addElement(History('record', fieldSize, recordingTimes), 'motor map', 'output');
 
 %% SIMULATION OF THE MODEL WITH THE COMPUTED INPUT, RUN [no_trials] ITERATIONS WITH noise_amplitude
 nb_trials = args{1, 'nbTrials'};
-rall = zeros([nb_trials, nn, nstep]);
-uall = zeros([nb_trials, nn, nstep]);
+rall = zeros([nb_trials, fieldSize, size(recordingTimes, 2)]);
 for trial=1:nb_trials;
-    %% SIMULATION:
-    [r, u] = computeNeuralFieldStep(nstep, zeros(nn, 1)-10, weight_matrix,
-    I_map, noise_amplitude, noise_start, tau_u, beta, nn);
-    %% EXTRACT RESULTS:
-    rall(trial, :, :) = r;
-    uall(trial, :, :) = u;
+    sim.init();
+    sim.run(nstep);
+    rall(trial, :, :) = sim.getComponent('record', 'output')';
 end
-return

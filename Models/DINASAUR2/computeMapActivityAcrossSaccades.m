@@ -1,4 +1,4 @@
-function [firingrate, membrane_potential] = computeMapActivityAccrossSaccades(nstep, ...
+function [firingrate, membrane_potential] = computeMapActivityAcrossSaccades(nstep, ...
   u_zero, mat_connections, input_map, noise_amplitude, noise_start, tau, beta, field_size)
   % DESCRIPTION
   % -------------
@@ -68,7 +68,7 @@ function [firingrate, membrane_potential] = computeMapActivityAccrossSaccades(ns
   tau_inv = 1./tau;             % inverse time constant
   firingrate = zeros(field_size, nstep);
   membrane_potential = zeros(field_size, nstep);
-  noise_map = [zeros(noise_start, nn); noise_amplitude*randn(nstep - noise_start, nn)]';
+  % noise_map = [zeros(noise_start, nn); noise_amplitude*randn(nstep - noise_start, nn)]';
   u = u_zero;
   r = 1 ./ (1 + exp(-beta*u));
 

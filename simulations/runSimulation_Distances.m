@@ -11,11 +11,12 @@ addpath('/home/c1248317/matlab/cosivina');
 % and they call a simulation a bunch of N iterations/trials (that would correspond to a session of N trials for one participant).
 % [simulation ID, SOA (time distance between target and distractor), nb trials, amplitude of white noise]
 
-sim_keys   = {'IDs' 'SOA' 'FixationPos' 'TargetPos' 'DistractorPos'...
+sim_keys   = {'trial_ID' 'condition_ID', 'nb_trials''SOA' 'FixationPos' 'TargetPos' 'DistractorPos'...
 'FixationWeight' 'TargetWeight' 'DistractorWeight' 'nbTrials' 'noise_amplitude'};
 fix_loc = 50; % this will be returned to determine the metric centre of the model
 distances = [10 20]; %[10, 20, 30, 40, 60, 80, 110, 140];
 iterations = 200;
+record_firing = false;
 home = '/home/c1248317/Bitbucket/Dinasaur';
 mkdir([home, '/results'], 'distances_test');
 
@@ -32,6 +33,7 @@ writetable(sim_values, [home, '/results/distances_test/table_distance.csv'])
 
 % DO WHAT WE WROTE WE WILL DO:
 inp = loadjson('input_map.json');
+all_event_tables = []
 for row = 1:size(sim_values, 1) % we run only 1 simulation of 100 iterations/trials here
     disp('Current Simulation:  '); disp(sim_values{row, :});
     tic
@@ -39,19 +41,22 @@ for row = 1:size(sim_values, 1) % we run only 1 simulation of 100 iterations/tri
     inp.inputs{2}.locations = sim_values{4}; %% NEXT TODO: FINISH INTEGRATING THE NEW WAY TO RUN THE MODEL
     % run the simulation 100 times:
     %[rall, uall]= runDinasaur2(sim_values(row,:));
-    rall = runDinasaurOriginal(inp);
-    disp('time of simulation')
+    [event_table, rall] = runDinasaurOriginal(inp, condition, iterations, record_firing);
+    all_event_tables = [all_event_tables; event_table];
+    disp('time of simulation:')
     toc
 
     tic
-    results.keys = sim_keys;
-    results.fixation = fix_loc;
-    results.values = table2array(sim_values(row,:));
-    results.firing_rate = rall;
-    % note that we can transform the firing rate to membrane potential with
-    % an inverse function.
-    save([home, '/results/distances_test/results_', num2str(row), '_distance.mat'], 'results')
-    disp('time saving data')
+    if record_firing
+      firing_recording.keys = sim_keys;
+      firing_recording.fixation = fix_loc;
+      firing_recording.values = table2array(sim_values(row,:));
+      firing_recording.firing_rate = rall;
+      % note that we can transform the firing rate to membrane potential with
+      % an inverse function.
+      save([home, '/results/distances_test/firing_', num2str(row), '_distance.mat'], 'firing_recording')
+    end
+    disp('time saving firing rate data:')
     toc
-
+  save
 end

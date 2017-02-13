@@ -27,13 +27,13 @@ function [ projectedInput ] = projectInput( input_map, border, output_size, drif
 
   if drift < 0
     cut_start = max([0, border-drift]) + 1;
-    place_holders = max([0, -drift-border]);
-    cut_end = cut_start + output_size - place_holders - 1;
+    place_holders = max([0, min(-drift-border, output_size) ]);
+    cut_end = min(cut_start + output_size - place_holders - 1, cut_start+output_size);
     projectedInput = [input_map(cut_start: cut_end), zeros([1, place_holders])];
   else
     cut_start = max([0, border-drift]) + 1;
-    place_holders = max([0, drift-border]);
-    cut_end =  cut_start + output_size - place_holders - 1;
+    place_holders = max([0, min(drift-border, output_size) ]);
+    cut_end =  min(cut_start + output_size - place_holders - 1, cut_start+output_size);
     projectedInput = [zeros(1, place_holders), input_map(cut_start:cut_end)];
   end
 end  % function

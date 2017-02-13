@@ -1,4 +1,4 @@
-function [locations, threshold, escape_prob] = applyStochasticThreshold(fr, fixation_pole, field_size, dt)
+function [locations, threshold, escape_prob] = applyStochasticThreshold(fr, threshold_func, tau, beta0, field_size, dt)
   % -- DESCRIPTION --
   % The threshold to trigger a saccade is unhomogenous over space (exponential
   % by default). Furthermore the threshold is stochastic: the distance of the
@@ -11,20 +11,8 @@ function [locations, threshold, escape_prob] = applyStochasticThreshold(fr, fixa
   %           The user will check if locations isempty to know whether the
   %           threshold was reached
   persistent first_time;
-  persistent threshold_func;  % shape of the threshold over space
-  persistent tau; persistent beta0;
   if isempty(first_time)
     first_time = false;
-    x = (1:field_size) - fixation_pole;
-    % old: tau = 0.1; beta0 = 10.0;
-    % best fit from oroginal DINASAUR (see branch noiseparameters):
-    % tau = 1.3586 and beta0 = 11.4967
-    % manually adjusted from best fit: tau = 1.4 and beta0 = 10
-    tau = 1.4; beta0 = 10.0;
-    threshold_func = zeros(1, field_size);
-    threshold_func(1, 1:fixation_pole) = exp(x(1:fixation_pole)/20) + .85; % + 0.85 by default
-    threshold_func(1, fixation_pole:end) = exp(-x(fixation_pole:end)/20) + .85;
-
     figure
     subplot(2, 2, 1)
     plot(threshold_func)
@@ -51,6 +39,7 @@ function [locations, threshold, escape_prob] = applyStochasticThreshold(fr, fixa
     plot(space, escapeProbabilityFunction(space, tau, beta0, dt) )
     title({'probability to trigger', '(according to distance from threshold)'})
   end
+
   threshold = threshold_func; % DON'T REMOVE: that is for the output
   %distance = (fr - threshold_func)./threshold_func;
   distance = fr - threshold_func;

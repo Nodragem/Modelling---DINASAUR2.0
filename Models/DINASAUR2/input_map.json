@@ -5,6 +5,7 @@
   "delay_exogenous": 50,
   "delay_endogenous": 75,
   "non_decision_time": 20,
+  "fixation_node": 100,
   "tau_on": 10,
   "tau_off": 1,
   "noise_start": 200,

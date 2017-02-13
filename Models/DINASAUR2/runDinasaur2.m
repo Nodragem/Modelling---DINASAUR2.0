@@ -40,6 +40,7 @@ function [event_table, I_map, rall]= runDinasaur2(simulation_details, condition_
   node_to_radian = 2*pi/nn; % need to keep the metric for now
   tau_u=10;                 % time decay constant of u
   beta=0.07;                % slope of the gain function:
+  fixation_node = simulation_details.fixation_node;
   % parameters of lateral connections:
   % the lateral connections are made of a gaussian function minus a constant
   % sig_w corresponds to 0.7 mm in the SC (see function doc for metrics) as in Trappenberg 2001
@@ -61,14 +62,16 @@ function [event_table, I_map, rall]= runDinasaur2(simulation_details, condition_
     rall = zeros([nb_trials, nn, nstep]);
   end
   table_keys = {'trial_ID', 'condition_ID' 'winner_ecc' 'saccade_ecc' 'gaze_pos' 'time'};
-  event_table = zeros([nb_trials*nstep, 4]); % that is the largest it can get
+  event_table = zeros([nb_trials*nstep, 6]); % that is the largest it can get
   bookmark = 1;
   for trial=1:nb_trials;
       %% SIMULATION:
+      clear getEyesDrift;
       [e, r] = computeMapActivityAcrossSaccades(nstep, zeros(nn, 1)-10, ...
-                                          weight_matrix, I_map, tau_u, beta, nn);
+                                          weight_matrix, I_map, tau_u, beta, fixation_node, nn);
       %% EXTRACT RESULTS:
-      event_table(bookmark:(bookmark+size(e, 1)-1), :) = [trial, condition_ID, e]; % we need -1 because MATLAB indexing starts at 1
+      event_table(bookmark:(bookmark+size(e, 1)-1), :) = ...
+       [repmat([trial, condition_ID],[+size(e, 1) 1]), e]; % we need -1 because MATLAB indexing starts at 1
       bookmark = bookmark + size(e, 1);
       if record_firing
         rall(trial, :, :) = r;

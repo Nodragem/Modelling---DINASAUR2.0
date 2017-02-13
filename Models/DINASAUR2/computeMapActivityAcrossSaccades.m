@@ -1,4 +1,4 @@
-function [firingrate, membrane_potential] = computeMapActivityAcrossSaccades(nstep, ...
+function [event_recording, firingrate] = computeMapActivityAcrossSaccades(nstep, ...
                     u_zero, mat_connections, input_map, tau, beta, fixation_node, field_size)
   % DESCRIPTION
   % -------------
@@ -52,21 +52,26 @@ function [firingrate, membrane_potential] = computeMapActivityAcrossSaccades(nst
   % -----------------------------------------------------------------------------------------------------------
 
   % -- Initialize fixation-related variables
-  model_fixation_pole = fixation_node;    % [constant] analogous to the rostral pole of the SC
-  center_of_gaze = fixation_node;         % [variable] analogous to the center of gaze
+  fixation_pole = fixation_node;                % [constant] analogous to the rostral pole of the SC
+  input_size = size(input_map, 1);
+  center_of_inputmap = round(input_size/2);
+  center_of_gaze = round(input_size/2);         % [variable] analogous to the center of gaze, in input/visual space
+
+  drift_gaze = 0;                               % the last selected target to fixate
   % the center of gaze projects on the fixation pole, while the center_of_gaze can vary
-  border = (size(input_map, 1) - field_size)/2;
+  border = (input_size - field_size)/2;
   if border < 0
    disp('ERROR: input_map is smaller than the dynamic neural field')
   end
+
   % -- Initialize the saccade averaging varibles:
   winner_boost = 5;
-  LLBN_weight = (1:field_size) - model_fixation_pole;
+  LLBN_weight = (1:field_size) - fixation_pole;
 
   % -- Initialize the recording
-  record_gaze = zeros([1000, 1]);
-  record_gaze(1,:) = center_of_gaze;
-  record_fixation_map = zeros([1000, 100]);
+  % 'winner_ecc' 'saccade_ecc' 'gaze_pos' 'time'
+  event_recording = NaN([nstep, 4]);
+  % record_fixation_map = zeros([nstep, input_size]);
 
   % -- Initialize the neural field at time t_0:
   tau_inv = 1./tau;             % inverse time constant
@@ -75,19 +80,32 @@ function [firingrate, membrane_potential] = computeMapActivityAcrossSaccades(nst
   % noise_map = [zeros(noise_start, nn); noise_amplitude*randn(nstep - noise_start, nn)]';
   u = u_zero;
   r = 1 ./ (1 + exp(-beta*u));
+  dt = 1;
+
+  % -- Initialize the threshold
+  x = (1:field_size) - fixation_pole;
+  % old: tau = 0.1; beta0 = 10.0;
+  % best fit from oroginal DINASAUR (see branch noiseparameters):
+  % tau = 1.3586 and beta0 = 11.4967
+  % manually adjusted from best fit: tau = 1.4 and beta0 = 10
+  tau_threshold = 1.4; beta_threshold = 10.0;
+  threshold_func = zeros(1, field_size);
+  threshold_func(1, 1:fixation_pole) = exp(x(1:fixation_pole)/20) + .85; % + 0.85 by default
+  threshold_func(1, fixation_pole:end) = exp(-x(fixation_pole:end)/20) + .85;
 
   % -- Computation Loop (Euler Method):
   for t=1:nstep
    % move the inputs according to new center_of_gaze (from drift/saccade)
-    projected_input = projectInput(input_map, border, field_size, ...
-                                  center_of_gaze - model_fixation_pole);
+   % FIXME: I think that it is making saccade outside the input map
+    projected_input = projectInput(input_map(:, t)', border, field_size, ...
+                                  round(center_of_inputmap - center_of_gaze));
     % update the DNF with Euler Method
-    u = u + tau_inv * (- u + projected_input(:,t) + mat_connections * r); % u is the current membrane potential
+    u = u + tau_inv * (- u + projected_input' + mat_connections * r); % u is the current membrane potential
     r = 1 ./ (1 + exp(-beta*u));
     firingrate(:,t) = r;
     membrane_potential(:, t) = u;
     % we check whether there are locations where the threshold was passed:
-    triggered_locations = applyStochasticThreshold(firingrate);
+    triggered_locations = applyStochasticThreshold(r', threshold_func, tau_threshold, beta_threshold, field_size, dt);
     if ~isempty(triggered_locations);
      % if yes: compute the saccadic vector, update center_of_gaze position
       if length(triggered_locations) == 1 % we want to give a boost to the winner
@@ -95,16 +113,21 @@ function [firingrate, membrane_potential] = computeMapActivityAcrossSaccades(nst
       else % if it is > 1, we need to select a winner randomly
         winner = randsample(triggered_locations, 1);
       end
-      saccadic_vector = getSaccadicVector(firingrate, LLBN_weight, ...
+      saccadic_vector = getSaccadicVector(r', LLBN_weight, ...
                                           winner, winner_boost);
       center_of_gaze = center_of_gaze + saccadic_vector;
+      % need to update the fixation memory map, even when no drift:
+      [cc, fix_map, drift_gaze] = getEyesDrift(drift_gaze, field_size, false);
+      event_recording(t,:) = [winner - fixation_pole, saccadic_vector, center_of_gaze, t];
     else
-     % if not: compute fixation drift, update center_of_gaze position
-      [fix_map, center_of_gaze] = getEyesDrift(center_of_gaze, field_size, ...
-                                              model_fixation_pole);
+     % if not: compute fixation drift, update drift_gaze position
+      [cc, fix_map, drift_gaze] = getEyesDrift(drift_gaze, field_size, true);
+      center_of_gaze = center_of_gaze + drift_gaze;
+      event_recording(t,:) = [NaN, NaN, center_of_gaze, t];
     end
     % record some variables
-    record_gaze(t, :) = center_of_gaze;
-    record_fixation_map(t, :) = fix_map;
+    % 'winner_ecc' 'saccade_ecc' 'gaze_pos' 'time'
+
+    %record_fixation_map(t, :) = fix_map;
   end
 end

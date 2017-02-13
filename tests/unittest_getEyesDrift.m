@@ -1,15 +1,16 @@
 % test and showcase the function getEyesDrift.m
 clearvars;
+clear getEyesDrift
 addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
-NN = 100;
+NN = 200;
 fixation = 50;
-gaze = 50;
+gaze = 0;
 steps = 1000;
 record_gaze = zeros([1000, 1]);
-record_map = zeros([1000, 100]);
+record_map = zeros([1000, NN]);
 
 for i=1:steps;
-  [map, gaze] = getEyesDrift(gaze, NN, fixation);
+  [center, map, gaze] = getEyesDrift(gaze, NN, true);
   record_gaze(i, :) = gaze;
   record_map(i, :) = map;
 end
@@ -28,7 +29,7 @@ open(vidObj);
 for i = 1:steps
     plot(record_map(i, :))
     hold on
-    plot(record_gaze(i, :), record_map(i, record_gaze(i, :)), 'ro' )
+    plot(record_gaze(i, :)+center, record_map(i, record_gaze(i, :)+center), 'ro' )
     hold off
     drawnow;
     writeVideo(vidObj, getframe(gca));
@@ -36,5 +37,5 @@ end
 close(gcf)
 %# save as AVI file, and open it using system video player
 close(vidObj);
-open('self_avoiding_random_walk_1D.avi')
+%open('self_avoiding_random_walk_1D.avi')
 disp('Done!')

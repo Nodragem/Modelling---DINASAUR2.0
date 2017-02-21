@@ -1,4 +1,4 @@
-function [event_recording, firingrate] = computeMapActivityAcrossSaccades(nstep, ...
+function [event_recording, firingrate, record_input] = computeMapActivityAcrossSaccades(nstep, ...
                     u_zero, mat_connections, input_map, tau, beta, fixation_node, field_size)
   % DESCRIPTION
   % -------------
@@ -57,8 +57,9 @@ function [event_recording, firingrate] = computeMapActivityAcrossSaccades(nstep,
   center_of_inputmap = round(input_size/2);
   center_of_gaze = round(input_size/2);         % [variable] analogous to the center of gaze, in input/visual space
 
-  drift_gaze = 0;                               % the last selected target to fixate
   % the center of gaze projects on the fixation pole, while the center_of_gaze can vary
+  clear getEyesDrift
+  global gaze_drift; gaze_drift = 0;
   border = (input_size - field_size)/2;
   if border < 0
    disp('ERROR: input_map is smaller than the dynamic neural field')
@@ -71,6 +72,7 @@ function [event_recording, firingrate] = computeMapActivityAcrossSaccades(nstep,
   % -- Initialize the recording
   % 'winner_ecc' 'saccade_ecc' 'gaze_pos' 'time'
   event_recording = NaN([nstep, 4]);
+  record_input = NaN([nstep, input_size]);
   % record_fixation_map = zeros([nstep, input_size]);
 
   % -- Initialize the neural field at time t_0:
@@ -90,44 +92,49 @@ function [event_recording, firingrate] = computeMapActivityAcrossSaccades(nstep,
   % manually adjusted from best fit: tau = 1.4 and beta0 = 10
   tau_threshold = 1.4; beta_threshold = 10.0;
   threshold_func = zeros(1, field_size);
-  threshold_func(1, 1:fixation_pole) = exp(x(1:fixation_pole)/20) + .85; % + 0.85 by default
-  threshold_func(1, fixation_pole:end) = exp(-x(fixation_pole:end)/20) + .85;
+  threshold_func(1, 1:fixation_pole) = 0.82*exp(x(1:fixation_pole)/20) + 1; % + 0.85 by default
+  threshold_func(1, fixation_pole:end) = 0.82*exp(-x(fixation_pole:end)/20) + 1;
 
   % -- Computation Loop (Euler Method):
   for t=1:nstep
    % move the inputs according to new center_of_gaze (from drift/saccade)
-   % FIXME: I think that it is making saccade outside the input map
-    projected_input = projectInput(input_map(:, t)', border, field_size, ...
-                                  round(center_of_inputmap - center_of_gaze));
+   % FIXME : commented temporarily
+  %  projected_input = projectInput(input_map(:, t)', border, field_size, ...
+  %                                 round(center_of_inputmap - center_of_gaze));
+    projected_input = input_map(:,t)';
+    record_input(t, :) = projected_input;
     % update the DNF with Euler Method
     u = u + tau_inv * (- u + projected_input' + mat_connections * r); % u is the current membrane potential
     r = 1 ./ (1 + exp(-beta*u));
     firingrate(:,t) = r;
     membrane_potential(:, t) = u;
     % we check whether there are locations where the threshold was passed:
-    triggered_locations = applyStochasticThreshold(r', threshold_func, tau_threshold, beta_threshold, field_size, dt);
-    if ~isempty(triggered_locations);
+    [triggered_locations, ~, ~] = applyStochasticThreshold(r', ...
+    threshold_func, tau_threshold, beta_threshold, field_size, dt);
+    if ~isempty(triggered_locations)
      % if yes: compute the saccadic vector, update center_of_gaze position
       if length(triggered_locations) == 1 % we want to give a boost to the winner
         winner = triggered_locations;
       else % if it is > 1, we need to select a winner randomly
         winner = randsample(triggered_locations, 1);
       end
-      saccadic_vector = getSaccadicVector(r', LLBN_weight, ...
-                                          winner, winner_boost);
+      % FIXME : commented temporarily
+      % saccadic_vector = getSaccadicVector(r', LLBN_weight, ...
+      %                                     winner, winner_boost);
+      saccadic_vector = winner - fixation_pole;
       center_of_gaze = center_of_gaze + saccadic_vector;
       % need to update the fixation memory map, even when no drift:
-      [cc, fix_map, drift_gaze] = getEyesDrift(drift_gaze, field_size, false);
+      % FIXME : commented temporarily
+      % [cc, fix_map, shift_gaze] = getEyesDrift(field_size, false, true);
+      % record some variables
+      % 'winner_ecc' 'saccade_ecc' 'gaze_pos' 'time'
       event_recording(t,:) = [winner - fixation_pole, saccadic_vector, center_of_gaze, t];
     else
      % if not: compute fixation drift, update drift_gaze position
-      [cc, fix_map, drift_gaze] = getEyesDrift(drift_gaze, field_size, true);
-      center_of_gaze = center_of_gaze + drift_gaze;
+     % FIXME : commented temporarily
+      % [cc, fix_map, shift_gaze] = getEyesDrift(field_size, true, true);
+      % center_of_gaze = center_of_gaze + shift_gaze;
       event_recording(t,:) = [NaN, NaN, center_of_gaze, t];
     end
-    % record some variables
-    % 'winner_ecc' 'saccade_ecc' 'gaze_pos' 'time'
-
-    %record_fixation_map(t, :) = fix_map;
   end
 end

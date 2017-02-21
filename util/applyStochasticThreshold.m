@@ -20,23 +20,29 @@ function [locations, threshold, escape_prob] = applyStochasticThreshold(fr, thre
     plot(fr)
     line([25, 25], [0 3], 'Color', [0,0,0])
     subplot(2, 2, 2)
-    plot(fr- threshold_func)
+    dista_a = fr- threshold_func;
+    plot(dista_a)
     hold on
-    dista = (fr - threshold_func)./threshold_func;
-    plot(dista)
+    dista_r = (fr - threshold_func)./threshold_func;
+    plot(dista_r)
     legend('distance from T', 'relative distance from T')
     line([0, 120], [-1 -1], 'Color', [0.5,0.5,0.5])
     title('threshold distance')
 
     subplot(2, 2, 3)
-    plot(1 / tau * exp(beta0 .* dista));
+    % plot(1 / tau * exp(beta0 .* dista_a));
     hold on
-    plot(escapeProbabilityFunction(dista, tau, beta0, dt), 'r')
+    plot(escapeProbabilityFunction(dista_a, tau, beta0, dt))
+    plot(escapeProbabilityFunction(dista_r, tau, beta0, dt))
+    legend('using abs distance', 'using relative distance')
     title('probability to trigger (on the map)')
 
     subplot(2, 2, 4)
     space = -1:0.01:0;
-    plot(space, escapeProbabilityFunction(space, tau, beta0, dt) )
+    curve = escapeProbabilityFunction(space, tau, beta0, dt);
+    plot(space, curve )
+    hold on
+    plot(space, curve - escapeProbabilityFunction(-1, tau, beta0, dt) )
     title({'probability to trigger', '(according to distance from threshold)'})
   end
 

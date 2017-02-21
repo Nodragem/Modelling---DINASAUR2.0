@@ -4,13 +4,15 @@ clear getEyesDrift
 addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
 NN = 200;
 fixation = 50;
-gaze = 0;
+global gaze_drift;
+gaze_drift = 50;
 steps = 1000;
 record_gaze = zeros([1000, 1]);
 record_map = zeros([1000, NN]);
 
 for i=1:steps;
-  [center, map, gaze] = getEyesDrift(gaze, NN, true);
+  [center, map, gaze] = getEyesDrift(NN, true, false);
+  % gaze_drift = 150;
   record_gaze(i, :) = gaze;
   record_map(i, :) = map;
 end

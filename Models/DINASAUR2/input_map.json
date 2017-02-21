@@ -14,7 +14,7 @@
     {
       "name": "Target",
       "weight": 1,
-      "location": 150,
+      "location": 64,
       "onset": 700,
       "duration": 300,
       "w_endo": 14,
@@ -25,10 +25,10 @@
       "name": "Distractor",
       "weight": 1,
       "comment": "will be overriden",
-      "location": 50,
+      "location": 136,
       "onset": 700,
       "duration": 50,
-      "w_endo": 14,
+      "w_endo": 0,
       "w_exo": 80,
       "sigma": 14.0
     },
@@ -36,11 +36,11 @@
       "name": "Fixation",
       "weight": 1,
       "location": 100,
-      "onset": 0,
+      "onset": -50,
       "duration": 700,
-      "w_endo": 10,
-      "w_exo": 10,
-      "sigma": 14.0
+      "w_endo": 18,
+      "w_exo": 80,
+      "sigma": 5.0
     }
 
   ]

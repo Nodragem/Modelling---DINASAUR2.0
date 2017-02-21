@@ -7,4 +7,6 @@ function probability = escapeProbabilityFunction(distance, tau, beta0, dt)
     escape_rate = 1 / tau * exp(beta0 * x);
   end
   probability = 1 - exp(-dt * escape_func(distance) );
+  % WARNING, FIXME: for now we obligate the curve to cross zero
+  probability = probability - (1 - exp(-dt * escape_func(-1) ));
 end

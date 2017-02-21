@@ -1,4 +1,4 @@
-function [ccenter, s, new_drift_gaze] = getEyesDrift(drift_gaze, nb_nodes, update_drift)
+function [ccenter, s, output] = getEyesDrift(nb_nodes, update_drift, return_move)
   % -- Description --
   % 1-D Self-avoiding random walk in a quadratic potential (i.e. in a bowl),
   % modified from the original 2D version in Engbert 2011, which we implemented
@@ -12,10 +12,12 @@ function [ccenter, s, new_drift_gaze] = getEyesDrift(drift_gaze, nb_nodes, updat
   persistent potential_map; % as oriented-object is slow, we need to used persistent variables in function as replacement
   persistent memory_map;
   persistent center;
+  global gaze_drift; % needs to be defined outsides
   if isempty(potential_map) % initialize variable when called for the first time
     center = round(nb_nodes/2);
     lambda = 1;
     L=51;
+    % gaze_drift = 0;
     tau = 0.5; %0.001;
     space_x = 1:nb_nodes;
     %FIXME: in fact we don't need to simulate with as many nodes as the DNF,
@@ -31,9 +33,9 @@ function [ccenter, s, new_drift_gaze] = getEyesDrift(drift_gaze, nb_nodes, updat
   if update_drift == true
     % px is coded from 0 to 99 (index starting at 1 makes a big
     % mess with modulo), we add + 1 to come back to 1 to 100 index
-    px = center + drift_gaze;
+    current_pos = center + gaze_drift;
     % directions looks at the activity on the left and the right of the current gaze
-    directions = [s(mod(px+1, nb_nodes) + 1), s(mod(px-1, nb_nodes) + 1)];
+    directions = [s(mod(current_pos+1, nb_nodes) + 1), s(mod(current_pos-1, nb_nodes) + 1)];
     % direction 1 is left, direction 2 is right
     if directions(1) == directions(2)
         v = directions(1);
@@ -42,16 +44,19 @@ function [ccenter, s, new_drift_gaze] = getEyesDrift(drift_gaze, nb_nodes, updat
         [v, choice] = min(directions);
     end
     % before to move we applies inhibition of return to the current position:
-    memory_map(px + 1) = 1; % FIXME WARNING, in the original m = 1 instead of m += 1
+    memory_map(current_pos + 1) = 1; % FIXME WARNING, in the original m = 1 instead of m += 1
     if choice == 1
-        px = mod(px + 1, nb_nodes);
+        next_move = 1;
     elseif choice == 2
-        px = mod(px - 1, nb_nodes);
+        next_move =- 1;
     end
-    new_drift_gaze = px - center;
   else
-    new_drift_gaze = drift_gaze;
+    next_move = 0;
   end % update_drift == true
-
-
+  gaze_drift = mod(current_pos + next_move, nb_nodes) - center;
+  if return_move == true
+    output = next_move;
+  else
+    output = gaze_drift;
+  end
 end  % function

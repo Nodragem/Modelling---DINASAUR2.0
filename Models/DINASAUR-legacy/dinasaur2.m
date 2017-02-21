@@ -299,6 +299,15 @@ for trial=1:no_trials;
     srt_dist_all(trial)=srt_dist;
     srt_err_all(trial)=srt_err;
     srt_targo_all(trial)=srt_targo;
+    % debug: 
+    % [x, y] = ind2sub(size(rall), find(rall>0.85))
+    % figure()
+    % imshow(uexoall(1:1100, :)' + uendoall(1:1100,:)')
+    % hold on
+    % plot(x, y, 'o')
+    % for ii = 0:100:1100
+    %      plot([ii ii], [0 200]);
+    % end
     %disp([trial srt_targo srt_targ]);
 
 end

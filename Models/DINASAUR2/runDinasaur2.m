@@ -65,18 +65,38 @@ function [event_table, I_map, rall]= runDinasaur2(simulation_details, condition_
   event_table = zeros([nb_trials*nstep, 6]); % that is the largest it can get
   bookmark = 1;
   for trial=1:nb_trials;
+      if mod(trial, 100) == 0
+          disp([int2str(trial), 'trials computed'])
+      end
       %% SIMULATION:
       clear getEyesDrift;
-      [e, r] = computeMapActivityAcrossSaccades(nstep, zeros(nn, 1)-10, ...
+      [e, ~, ri] = computeMapActivityAcrossSaccades(nstep, zeros(nn, 1)-10, ...
                                           weight_matrix, I_map, tau_u, beta, fixation_node, nn);
       %% EXTRACT RESULTS:
       event_table(bookmark:(bookmark+size(e, 1)-1), :) = ...
-       [repmat([trial, condition_ID],[+size(e, 1) 1]), e]; % we need -1 because MATLAB indexing starts at 1
+       [repmat([trial, condition_ID],[size(e, 1) 1]), e]; % we need -1 because MATLAB indexing starts at 1
       bookmark = bookmark + size(e, 1);
-      if record_firing
-        rall(trial, :, :) = r;
-      end
+      % debug:
+      % figure();
+      % imshow(ri');
+      % hold on;
+      % plot(e(:, 4), e(:, 1)+100, 'o-');
+      % for ii = 0:100:1100
+      %      plot([ii ii], [0 200]);
+      % end
+      % figure(); plot(r(:, 250))
+      % hold on;
+      %  plot(ri(250, :)/18)
+      % xx = 0:200;
+      % plot(gaussian(xx, 99, 0.95, 16, false))
+      % plot(gaussian(xx, 99, 0.94, 16, false) + 0.01)
+      
+      %if record_firing
+      % rall(trial, :, :) = r;
+      %end
   end
-  event_table = array2table(event_table(event_table(:, 4) > 0, :), ... % removes empty rows
+  event_table = array2table(event_table(event_table(:, 4) ~= 0, :), ... % removes empty rows
                           'VariableNames', table_keys);
+  %event_table = array2table(event_table, ... % removes empty rows
+   %                       'VariableNames', table_keys);
   return

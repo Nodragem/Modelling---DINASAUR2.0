@@ -9,3 +9,5 @@
      r = 1 ./ (1 + exp(-beta*u));
      rall(:,t) = r;
    end
+
+   

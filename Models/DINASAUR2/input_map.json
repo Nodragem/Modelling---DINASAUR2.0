@@ -13,7 +13,7 @@
   "inputs": [
     {
       "name": "Target",
-      "weight": 1,
+      "weight": 0,
       "location": 64,
       "onset": 700,
       "duration": 300,
@@ -23,7 +23,7 @@
     },
     {
       "name": "Distractor",
-      "weight": 1,
+      "weight": 0,
       "comment": "will be overriden",
       "location": 136,
       "onset": 700,

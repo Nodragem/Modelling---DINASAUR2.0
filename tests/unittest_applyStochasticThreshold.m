@@ -1,7 +1,7 @@
 % test and showcase the function applyStochasticThreshold.m
 clearvars;
 clear applyStochasticThreshold;
-addpath(genpath('/home/c1248317/Bitbucket/Dinasaur'))
+addpath(genpath('C:\\Users\\geoff\\MyDocuments\\Bitbucket\\dinasaur'))
 % shuffle the random generator of MATLAB to avoid to get the same results
 %rng('shuffle');
 
@@ -10,10 +10,12 @@ field_size = 200;
 dt = 1;
 %fixation = mirrorGaussian(fixation_pole, 1, 5, field_size)';
 %fixation = mirrorGaussian(fixation_pole, 1, 14, field_size)';
-%fixation = gaussian(1:field_size, 100, 0.94, 16, false) + 0.01;
-fixation = gaussian(1:field_size, 99, 0.94, 16, false) + 0.01;
+fixation = gaussian(1:field_size, 100, 0.94, 16, false) + 0.01; % favorite fitted from dinasaur 2.0
+%fixation = csvread('DINASAUR-legacy/meanfiringrate_fixation.csv')
+%fixation = gaussian(1:field_size, 99, 0.45, 16, false) + 0.06; % fitted from legacy
+fixation = gaussian(1:field_size, 99, 0.94, 16, false) + 0.01; 
 %fixation = gaussian(1:field_size, 99, 0.70, 16, false) + 0.01;
-fixation = gaussian(1:field_size, 99, 0.0, 16, false) + 0.01;
+%fixation = gaussian(1:field_size, 99, 0.0, 16, false) + 0.01;
 target = 0*mirrorGaussian(50, 1, 10, field_size)';
 distractor = 0*mirrorGaussian(150, 0.7, 5, field_size)';
 
@@ -26,12 +28,15 @@ tau_threshold = 1.4; beta_threshold = 10.0;
 threshold_func = zeros(1, field_size);
 % original Dinasaur would look like that:
 threshold_func(1, 1:end) =  0.85;
+% step threshold in Annie experiment:
+threshold_func(1, 1:end) =  0.85;
+threshold_func(80:120) = 10;
 % % original Dinasaur would look like that (except for the exp)
-threshold_func(1, 1:fixation_pole) = 1*exp(x(1:fixation_pole)/20) + 0.85; % + 0.85 by default
-threshold_func(1, fixation_pole:end) = 1*exp(-x(fixation_pole:end)/20) + 0.85;
+%threshold_func(1, 1:fixation_pole) = 1*exp(x(1:fixation_pole)/20) + 0.85; % + 0.85 by default
+%threshold_func(1, fixation_pole:end) = 1*exp(-x(fixation_pole:end)/20) + 0.85;
 % %but it seems that this solution is better:
-threshold_func(1, 1:fixation_pole) = 0.82*exp(x(1:fixation_pole)/20) + 1; % + 0.85 by default
-threshold_func(1, fixation_pole:end) = 0.82*exp(-x(fixation_pole:end)/20) + 1;
+%threshold_func(1, 1:fixation_pole) = 0.82*exp(x(1:fixation_pole)/20) + 1; % + 0.85 by default
+%threshold_func(1, fixation_pole:end) = 0.82*exp(-x(fixation_pole:end)/20) + 1; % favorite
 % we want a stochastic threshold that produces:
 % - 1-2 microsaccades (saccade at the fixation) per seconds
 % - not too much spatial variability
@@ -56,8 +61,8 @@ for trial=1:nb_simulations
  %   locations(1, trial) = 1000;
   end
 end
-figure
-subplot(1,2,1)
+figure('Position', [100, 100, 1000, 300])
+subplot(1,3,1)
 plot(field*nb_simulations/4/1000, 1:field_size, 'Color', '[1, 0.7, 0.7]')
 ylabel('Space (nodes)')
 xlabel('Activity or Time (seconds)')
@@ -65,9 +70,19 @@ hold on
 plot(threshold*nb_simulations/4/1000, 1:field_size)
 line([nb_simulations/4/1000, nb_simulations/4/1000], [0, field_size])
 plot( (1:nb_simulations)/1000, locations, 'r.')
-subplot(1,2,2)
-[f, x] = hist(locations, 100);
-bar(x, f/10)
+subplot(1,3,2)
+[f, x] = hist(locations , 0:3:200);
+[fk, xk] = ksdensity(locations,'bandwidth', 4);
+bar(x, f/10); xlim([0, 200]); hold on;
+plot(xk, (fk/max(fk)) * 4*mean(f/10));
+title(['n=', int2str(sum(f)), '; peri=', int2str(sum( f(x<80 | x>120) ) ) ]) 
+xlabel('Space (nodes)')
+ylabel('Saccades/seconds')
+subplot(1,3,3)
+[f, x] = hist(abs(locations - fixation_pole), 0:3:100);
+[fk, xk] = ksdensity(abs(locations - fixation_pole),'bandwidth', 4);
+bar(x, f/10); xlim([0, 200]); hold on;
+plot(xk, (fk/max(fk)) * 4*mean(f/10));
 title(['n=', int2str(sum(f)), '; peri=', int2str(sum( f(x<80 | x>120) ) ) ]) 
 xlabel('Space (nodes)')
 ylabel('Saccades/seconds')

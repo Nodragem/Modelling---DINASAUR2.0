@@ -34,7 +34,7 @@ function [event_table, I_map, rall]= runDinasaur2(simulation_details, condition_
   % -----------------------------------------------------------------------------------------------------------
 
   randn('state', 10000);
-  %% SET UT PARAMETER OF THE DNF:
+  % SET UT PARAMETER OF THE DNF:
   ini_thres=.85;            % not used for now
   nn = 200;                 % number of nodes
   node_to_radian = 2*pi/nn; % need to keep the metric for now
@@ -57,7 +57,7 @@ function [event_table, I_map, rall]= runDinasaur2(simulation_details, condition_
     return
   end
 
-  %% SIMULATION OF THE MODEL WITH THE COMPUTED INPUT, RUN [nb_trials] ITERATIONS
+  % SIMULATION OF THE MODEL WITH THE COMPUTED INPUT, RUN [nb_trials] ITERATIONS
   if record_firing
     rall = zeros([nb_trials, nn, nstep]);
   end
@@ -68,15 +68,17 @@ function [event_table, I_map, rall]= runDinasaur2(simulation_details, condition_
       if mod(trial, 100) == 0
           disp([int2str(trial), 'trials computed'])
       end
-      %% SIMULATION:
+      % SIMULATION:
       clear getEyesDrift;
-      [e, ~, ri] = computeMapActivityAcrossSaccades(nstep, zeros(nn, 1)-10, ...
+      [e, r, ri] = computeMapActivityAcrossSaccades(nstep, zeros(nn, 1)-10, ...
                                           weight_matrix, I_map, tau_u, beta, fixation_node, nn);
-      %% EXTRACT RESULTS:
+      % EXTRACT RESULTS:
       event_table(bookmark:(bookmark+size(e, 1)-1), :) = ...
        [repmat([trial, condition_ID],[size(e, 1) 1]), e]; % we need -1 because MATLAB indexing starts at 1
       bookmark = bookmark + size(e, 1);
-      % debug:
+      % DEBUG
+      % % size(r) % 200 1100
+      %  plot(r(100, :)); hold on; plot(r(140, :)); ylim([0 1]);
       % figure();
       % imshow(ri');
       % hold on;

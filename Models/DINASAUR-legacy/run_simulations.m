@@ -5,7 +5,7 @@ sim_tab=[
 %  1 -60 1200 50;
  %2 -40 1200 50
  %3 -20 1200 50
- 4 0 1200 50;
+ 4 40 1200 0;
  5 20 1200 50
  6 40 1200 50;
  7 60 1200 50;
@@ -23,14 +23,16 @@ for sim=1:no_sim
     noise=sim_tab(sim,4);
     
     %         [srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=Aline(soa,no_trials,noise);
-    [srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=dinasaur2(soa,no_trials,noise);
+    [rall srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=dinasaur2(soa,no_trials,noise);
     
     srt_targ_allsoa(:,sim)=srt_targ_all;
     srt_dist_allsoa(:,sim)=srt_dist_all;
     srt_err_allsoa(:,sim)=srt_err_all;
     
     
-    
+    % DEBUG
+    % rall
+    % [x, y] = ind2sub(size(rall), find(rall>0.85));
     RTmin=0;
     RTmax=500;
     xrange=[RTmin 300]; %yrange=[0 22];

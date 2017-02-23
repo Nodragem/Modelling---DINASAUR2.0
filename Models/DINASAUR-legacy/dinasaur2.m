@@ -3,7 +3,7 @@
 % one gaussian signal (SC simulation) Aline Bompas 06/2010
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=dinasaur2(soa,no_trials,noise)
+function [rall srt_targ_all,srt_dist_all,srt_err_all,srt_targo_all]=dinasaur2(soa,no_trials,noise)
 
 %soa is positive when distractor comes after target
 %soa=-50 in Trappenberg 2001
@@ -48,12 +48,12 @@ dexo=50; dendo=75; OT=20;   %bompas 2011 settings: 50, 75, 20
 A=40;
 I=55;
 sig_w = 2*pi/10*0.7;%0.7; %we simulate 2*5mm of SC with sig=0.6mm
-%% hebb_A is the connection matrix computation function (not a diff of gaussian):
-%% nn: number of nodes
-%% dx: distance between nodes (in radians) cause we are on a circular field.
-%% sig_w: sigma of the gaussian, note that the function is not a Diff of Gaussians
-%% A: the amplitude of the gaussian
-%% I: the y-offset (inhibition depth) of the gaussian
+% hebb_A is the connection matrix computation function (not a diff of gaussian):
+% nn: number of nodes
+% dx: distance between nodes (in radians) cause we are on a circular field.
+% sig_w: sigma of the gaussian, note that the function is not a Diff of Gaussians
+% A: the amplitude of the gaussian
+% I: the y-offset (inhibition depth) of the gaussian
 w = hebb_A(nn,dx,sig_w,A,I);
 
 off_signal=zeros(nn,1)';
@@ -212,7 +212,7 @@ for trial=1:no_trials;
 
     noise_t=[zeros(200,nn); noise*randn(1200,nn)];
 
-    %% integration of field with event input and calculation of SRT
+    % integration of field with event input and calculation of SRT
 %{
     u = zeros(1,nn)-10; u_no = zeros(1,nn)-10;
     t = 0;
@@ -247,6 +247,9 @@ for trial=1:no_trials;
     rall_no= rnn_ode_u_A_fast(nstep, zeros(nn,1)-10, w, uexoall_no, uendoall, noise_t, tau_u,beta,dx,nn)';
     rall   = rnn_ode_u_A_fast(nstep, zeros(nn,1)-10, w, uexoall   , uendoall, noise_t, tau_u,beta,dx,nn)';
 %%%%
+    % DEBUG
+    % size(rall) % 1200 200
+    % plot(rall(:, 100)); hold on; plot(rall(:, 140)); ylim([0 1]);
 
     tmp_dist=tall(rall(:,node_dist)>ini_thres);
     tmp_targ=tall(rall(:,node_targ)>ini_thres);
@@ -300,14 +303,20 @@ for trial=1:no_trials;
     srt_err_all(trial)=srt_err;
     srt_targo_all(trial)=srt_targo;
     % debug: 
-    % [x, y] = ind2sub(size(rall), find(rall>0.85))
-    % figure()
-    % imshow(uexoall(1:1100, :)' + uendoall(1:1100,:)')
-    % hold on
-    % plot(x, y, 'o')
-    % for ii = 0:100:1100
-    %      plot([ii ii], [0 200]);
-    % end
+%     [x, y] = ind2sub(size(rall), find(rall>0.85));
+%     figure()
+%     ri = uexoall(1:1100, :)' + uendoall(1:1100,:)';
+%     imshow(ri)
+%     hold on
+%     plot(x, y, 'o')
+%     for ii = 0:100:1100
+%          plot([ii ii], [0 200]);
+%     end
+%     figure(); plot(mean(rall(250:700, :), 1) )
+%       hold on;
+%        plot(ri(:, 250)/18)
+%       xx = 0:200;
+%       plot(gaussian(xx, 99, 0.45, 16, false) + 0.06)
     %disp([trial srt_targo srt_targ]);
 
 end

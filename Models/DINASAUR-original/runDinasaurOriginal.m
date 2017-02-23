@@ -32,7 +32,7 @@ function [rall, uall]= runDinasaurOriginal(args)
 % -----------------------------------------------------------------------------------------------------------
 randn('state', 10000); %sum(100*clock));
 
-%% SET UT PARAMETER OF THE DNF:
+% SET UT PARAMETER OF THE DNF:
 ini_thres=.85; % not used for now
 % number of nodes:
 nn = 200;
@@ -57,14 +57,14 @@ noise_amplitude = args{1, 'noise_amplitude'};
 noise_start = 200; % ms
 
 
-%% SET UT INPUT LOCATIONS:
+% SET UT INPUT LOCATIONS:
 % now the locations are specified in model nodes, the metrics should be encapsulated in
 % functions outside this one;
 loc_fix    =  args{1, 'FixationPos'};
 loc_targ   = args{1, 'TargetPos'};
 loc_dist   = args{1, 'DistractorPos'};
 
-%% SET UP INPUT EVENTS:
+% SET UP INPUT EVENTS:
 soa = args{1, 'SOA'};
 targ_on = 700; targ_dur = + 300;
 targ_off = targ_on + targ_dur ;
@@ -77,7 +77,7 @@ step_simulation = 1; % millisecond for us
 time = 1:step_simulation:end_simulation;
 nstep=size(time, 2);
 
-%% CONNECTIONS OF THE INPUTS WITH THE DNF:
+% CONNECTIONS OF THE INPUTS WITH THE DNF:
 % make gaussian shapes at the target, distractor and fixation locations.
 % here the parameters of the gaussian (sigma and amplitudes):
 sig = 14.0; % corresponds to 0.7 mm on the SC (see function doc for metrics) as in Trappenberg 2001
@@ -90,7 +90,7 @@ targ_conn = mirrorGaussian(loc_targ, args{1, 'TargetWeight'}, sig, nn)';
 dist_conn = mirrorGaussian(loc_dist, args{1, 'DistractorWeight'}, sig, nn)';
 I_conn = [fix_conn; targ_conn; dist_conn]';
 
-%% CREATION OF THE INPUT SIGNAL TO THE DNF:
+% CREATION OF THE INPUT SIGNAL TO THE DNF:
 % those will be the interpolated signals, i.e. the actual inputs time series
 I_fix =  stepFunction(time, aendo_fix,  fix_on  + dendo, fix_off  + dendo);
 I_targ = stepFunction(time, aendo_targ, targ_on + dendo, targ_off + dendo)...
@@ -103,16 +103,16 @@ I_map = I_conn * I_all; % the time course of I_fix (col 1) will  be mapped to th
 % surf(I_conn * I_all, 'EdgeColor','none','LineStyle','none','FaceLighting','phong')
 
 
-%% SIMULATION OF THE MODEL WITH THE COMPUTED INPUT, RUN [no_trials] ITERATIONS WITH noise_amplitude
+% SIMULATION OF THE MODEL WITH THE COMPUTED INPUT, RUN [no_trials] ITERATIONS WITH noise_amplitude
 nb_trials = args{1, 'nbTrials'};
 rall = zeros([nb_trials, nn, nstep]);
 uall = zeros([nb_trials, nn, nstep]);
 for trial=1:nb_trials;
-    %% SIMULATION:
+    % SIMULATION:
     noise_t=[zeros(noise_start, nn); noise_amplitude*randn(nstep - noise_start, nn)]';
     [r, u] = computeNeuralFieldStep(nstep, zeros(nn, 1)-10, weight_matrix, ...
     I_map, noise_t, tau_u, beta, nn);
-    %% EXTRACT RESULTS:
+    % EXTRACT RESULTS:
     rall(trial, :, :) = r;
     uall(trial, :, :) = u;
 end

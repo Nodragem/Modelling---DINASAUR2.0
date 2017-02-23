@@ -23,7 +23,7 @@ function [event_recording, firingrate, record_input] = computeMapActivityAcrossS
   % if yes:
   %    compute the saccadic vector,
   %    update center_of_gaze position
-  %% if not:
+  % if not:
   %    compute fixation drift
   %    update center_of_gaze position
   % then(first line): move the inputs according to new center_of_gaze (from drift/saccade)
@@ -105,7 +105,7 @@ function [event_recording, firingrate, record_input] = computeMapActivityAcrossS
     record_input(t, :) = projected_input;
     % update the DNF with Euler Method
     u = u + tau_inv * (- u + projected_input' + mat_connections * r); % u is the current membrane potential
-    r = 1 ./ (1 + exp(-beta*u));
+    r = 1 ./ (1 + exp(-beta*u)); 
     firingrate(:,t) = r;
     membrane_potential(:, t) = u;
     % we check whether there are locations where the threshold was passed:

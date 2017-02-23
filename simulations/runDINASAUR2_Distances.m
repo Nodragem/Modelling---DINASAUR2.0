@@ -30,7 +30,7 @@ disp(d);
 
 %% PARSE YOUR CHANGES to the input details object
 % DO WHAT WE WROTE WE WILL DO:
-inp = loadjson('input_map_original.json');
+inp = loadjson('input_map.json');
 % inp.inputs{2}.weight = 0; % remove the distractor
 % inp.fixation_node = d.fix_loc;
 % inp.inputs{3}.location = d.fix_loc; % relocate the Fixation
@@ -38,6 +38,7 @@ all_event_tables = [];
 cond_array = [];
 input_maps = {};
 condition_ID = 0;
+
 for dd = 1:length(d.Distances) % we run only 1 simulation of 100 iterations/trials here
   for soa = 1:length(d.SOAs)
     condition_ID = condition_ID + 1;

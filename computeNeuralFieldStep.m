@@ -33,7 +33,7 @@ function firingrate=computeNeuralFieldStep(nstep, u_zero, mat_connections, input
    r = 1 ./ (1 + exp(-beta*u));  firingrate(:,1)=r;
    % Loop Euler Method:
    for t=1:nstep
-     u = u + tau_inv * (sum_input(:,t) - u + mat_connections * r * dx); % u is the current membrane potential
+     u = u + tau_inv * (sum_input(:,t) - u + mat_connections * r); % u is the current membrane potential
      r = 1 ./ (1 + exp(-beta*u));
      firingrate(:,t) = r;
    end

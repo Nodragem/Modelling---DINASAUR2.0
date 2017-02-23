@@ -26,7 +26,7 @@ A=40;
 I=55;
 sig_w = 0.7 * mm_to_radian;  % we simulate 10 mm of SC with sig=0.7mm
 % this will compute the connection matrix (N x N matrix if N is the number of neurons):
-w = gaussianConnection1D(nn, node_to_radian, sig_w, A, I);
+w = gaussianConnection1D(nn, sig_w, A, I) * node_to_radian;
 noise_start = 0; % ms
 
 
@@ -57,7 +57,7 @@ nstep=size(time, 2);
 % make gaussian shapes at the target, distractor and fixation locations.
 % here the parameters of the gaussian (sigma and amplitudes):
 sig = mm_to_radian*0.7;
-aendo_fix  = 0; aendo_fix_gap  = 3; aexo_fix  = 10;
+aendo_fix  = 0; aendo_fix_gap  = 3; aexo_fix  = 0;
 aendo_targ = 30; aendo_targ_gap = 0; aexo_targ = 0;
 aendo_dist =  0; aendo_dist_gap = 0; aexo_dist = aexo_targ;
 

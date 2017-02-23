@@ -33,7 +33,7 @@ A=40;
 I=55;
 sig_w = 0.7 * mm_to_radian;  % we simulate 10 mm of SC with sig=0.7mm
 % this will compute the connection matrix (N x N matrix if N is the number of neurons):
-w = gaussianConnection1D(nn, node_to_radian, sig_w, A, I);
+w = gaussianConnection1D(nn, node_to_radian, sig_w, A, I) * node_to_radian;;
 noise_start = 200 % ms
  
 
@@ -64,7 +64,7 @@ nstep=size(time, 2);
 % make gaussian shapes at the target, distractor and fixation locations.
 % here the parameters of the gaussian (sigma and amplitudes):
 sig = mm_to_radian*0.7;
-aendo_fix  = 10; aendo_fix_gap  = 3; aexo_fix  = 10;
+aendo_fix  = 10; aendo_fix_gap  = 0; aexo_fix  = 10;
 aendo_targ = 14; aendo_targ_gap = 0; aexo_targ = 80;
 aendo_dist =  0; aendo_dist_gap = 0; aexo_dist = aexo_targ;
 
@@ -104,6 +104,23 @@ for trial=1:no_trials;
     tmp_targ=time(rall(:,node_targ)>ini_thres);
     tmp_err=time(rall_no(:,node_dist)>ini_thres);
     tmp_targo=time(rall_no(:,node_targ)>ini_thres);
+    
+    % DEBUG CODE
+    [x, y] = ind2sub(size(rall), find(rall>0.85));
+    figure()
+    ri = I_map;
+    imshow(ri)
+    hold on
+    plot(x, y, 'o')
+    for ii = 0:100:1100
+         plot([ii ii], [0 200]);
+    end
+    figure(); plot(mean(rall(250:700, :), 1) )
+      hold on;
+       plot(ri(:, 250)/18)
+      xx = 0:200;
+      plot(gaussian2(xx, 99, 0.45, 16, false) + 0.06)
+    disp([trial srt_targo srt_targ]);
 
     % 2 - DEFINE THE SACCADE DIRECTION/ BEHAVIORAL RESPONSE MADE BY THE MODEL:
     % look at the average of activity upper the threshold around the target,
